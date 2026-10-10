@@ -1,6 +1,6 @@
 # Lessons: minbpe
 
-Lineage `20651398b7fa2afe214ef9e5b518fc28b043f29003bd379c8f09a104288353a4` on [https://github.com/karpathy/minbpe](https://github.com/karpathy/minbpe) at `1acefe89412b20245db5a22d2a02001e547dc602`. 44 published attempts.
+Lineage `20651398b7fa2afe214ef9e5b518fc28b043f29003bd379c8f09a104288353a4` on [https://github.com/karpathy/minbpe](https://github.com/karpathy/minbpe) at `1acefe89412b20245db5a22d2a02001e547dc602`. 45 published attempts.
 
 Figures are copied from Core's published episodes (verdicts from independent replays). Nothing here is estimated.
 
@@ -21,13 +21,13 @@ Figures are copied from Core's published episodes (verdicts from independent rep
 
 ## Target perf:encode_ir
 
-- Attempts: 6 (5 accepted, 1 rejected)
+- Attempts: 7 (5 accepted, 2 rejected)
 - Best accepted effect: 21.84% (ratio 0.7816), episode `9c2514fd843e`
 - Accepted effects: 21.84%, 20.38%, 9.31%, 8.34%, 2.85%
-- Why candidates failed: stale_conflict (1)
+- Why candidates failed: stale_conflict (1), stale (1)
 - Files changed by accepted candidates: `minbpe/base.py`, `minbpe/basic.py`, `minbpe/gpt4.py`, `minbpe/regex.py`
 - Files changed by rejected candidates: `minbpe/base.py`, `minbpe/basic.py`, `minbpe/regex.py`
-- Median model spend per attempt: 0.1916 USD (over 6 attempts with a recorded cost)
+- Median model spend per attempt: 0.1990 USD (over 7 attempts with a recorded cost)
 
 ## Licence
 
