@@ -1,13 +1,13 @@
 # Lessons: minbpe
 
-Lineage `20651398b7fa2afe214ef9e5b518fc28b043f29003bd379c8f09a104288353a4` on [https://github.com/karpathy/minbpe](https://github.com/karpathy/minbpe) at `1acefe89412b20245db5a22d2a02001e547dc602`. 41 published attempts.
+Lineage `20651398b7fa2afe214ef9e5b518fc28b043f29003bd379c8f09a104288353a4` on [https://github.com/karpathy/minbpe](https://github.com/karpathy/minbpe) at `1acefe89412b20245db5a22d2a02001e547dc602`. 43 published attempts.
 
 Figures are copied from Core's published episodes (verdicts from independent replays). Nothing here is estimated.
 
 ## Target (none chosen)
 
-- Attempts: 19 (1 abandoned, 18 no candidate)
-- Median model spend per attempt: 0.3975 USD (over 1 attempt with a recorded cost)
+- Attempts: 21 (1 abandoned, 20 no candidate)
+- Median model spend per attempt: 0.4032 USD (over 2 attempts with a recorded cost)
 
 ## Target perf:train_ir
 
