@@ -1,0 +1,190 @@
+{
+  "schema": "lineage-episode/1",
+  "episode_id": "a83739e6bfb80bbeadbb80694a6767e5c353b6c49d2ff85ec9ce6df84f4b725b",
+  "seq": 2762,
+  "network": "devnet",
+  "session_id": "bb00f80b76269cabbb9b31ba9e51efae8408446af129041df2a77fdfbf7509a0",
+  "agent": {
+    "id": "6C8N2z5LwktukWEP6g8sUnf9ky1L9rxyngBLbdomUzHc",
+    "name": null,
+    "hidden": true,
+    "hosted": true,
+    "identity_mode": "purchased",
+    "soul": null
+  },
+  "model": {
+    "provider": null,
+    "models": [],
+    "route": null,
+    "harness": {
+      "name": "routed",
+      "version": null,
+      "digest": null
+    },
+    "source": "session.proposer"
+  },
+  "task": {
+    "recipe": {
+      "recipe_id": "46a0d78dd189aa96c32d8f87402f2288b375c0934af32d036350034feb51f648",
+      "name": "minbpe",
+      "class": "python",
+      "repo": "https://github.com/karpathy/minbpe",
+      "commit": "1acefe89412b20245db5a22d2a02001e547dc602"
+    },
+    "lineage_id": "20651398b7fa2afe214ef9e5b518fc28b043f29003bd379c8f09a104288353a4",
+    "parent_gen_id": "165d08a691585178c82c2c3f4b3aa6e64ead13fad05458d3396fe1fbd2025a43",
+    "parent_height": 16,
+    "metrics": [
+      {
+        "name": "train_ir",
+        "kind": "perf",
+        "direction": "lower",
+        "deterministic": true,
+        "min_effect": 0.01
+      },
+      {
+        "name": "encode_ir",
+        "kind": "perf",
+        "direction": "lower",
+        "deterministic": true,
+        "min_effect": 0.01
+      }
+    ],
+    "target": null,
+    "baseline": null
+  },
+  "plan": {
+    "planned": null,
+    "opening_note": null,
+    "source": "session notes"
+  },
+  "hypotheses": [],
+  "actions": [
+    {
+      "seq": 1,
+      "kind": "list",
+      "path": "minbpe",
+      "count": 5,
+      "at": 1791664656863
+    },
+    {
+      "seq": 2,
+      "kind": "read",
+      "path": "lineage_bench.py",
+      "start_line": 1,
+      "end_line": 107,
+      "content_sha256": "0e575e458ce50ddadd5137d4ad35bdf3dde443e46e4c7a6be1d8011a16d274ca",
+      "at": 1791664656873
+    },
+    {
+      "seq": 3,
+      "kind": "read",
+      "path": "minbpe/base.py",
+      "start_line": 1,
+      "end_line": 344,
+      "content_sha256": "56386166f3d18b2d0b203478344194d3578e5d8eae2c9e9ebf7d123f11fe82dc",
+      "at": 1791664659010
+    },
+    {
+      "seq": 4,
+      "kind": "read",
+      "path": "minbpe/regex.py",
+      "start_line": 1,
+      "end_line": 247,
+      "content_sha256": "80948f9f7d539938b0538f37a9ce5de8e6be9e72d82f6989413dd896777e1406",
+      "at": 1791664659011
+    },
+    {
+      "seq": 5,
+      "kind": "read",
+      "path": "minbpe/basic.py",
+      "start_line": 1,
+      "end_line": 126,
+      "content_sha256": "016ebafb767bc455b9f46acaf0c72197c8da52dfb9defcb3c05a7f24098c4be5",
+      "at": 1791664659011
+    },
+    {
+      "seq": 6,
+      "kind": "read",
+      "path": "minbpe/__init__.py",
+      "start_line": 1,
+      "end_line": 5,
+      "content_sha256": "d01f1961bdef63cec9c0435053c303756a7d329a59ca465f84f65383d9174119",
+      "at": 1791664675161
+    },
+    {
+      "seq": 7,
+      "kind": "read",
+      "path": "minbpe/gpt4.py",
+      "start_line": 1,
+      "end_line": 133,
+      "content_sha256": "ec8e5229cc991ee23634e235cf53ef98b8e06774edb71f68cba39e253a5c5a9b",
+      "at": 1791664675165
+    },
+    {
+      "seq": 8,
+      "kind": "edit",
+      "path": "minbpe/base.py",
+      "start_line": 31,
+      "end_line": 33,
+      "lines_before": 3,
+      "lines_after": 48,
+      "at": 1791664809333,
+      "diff": "--- a/minbpe/base.py\n+++ b/minbpe/base.py\n@@ -31,3 +31,48 @@\n-    _count_elements(counts, zip(ids, ids[1:]))\n-    return counts\n-\n+    _count_elements(counts, zip(ids, ids[1:]))\n+    return counts\n+\n+\n+# number of top counted pairs kept in the \"hot\" candidate set during training\n+_HOT_PAIRS = 64\n+\n+def _max_count_pairs(stats, hot):\n+    \"\"\"\n+    Training helper: return (top, pairs) where top is max(stats.values()) and\n+    pairs lists every pair whose count equals top (in no particular order).\n+    hot = [set, T] caches all pairs with count >= T (a superset of them, stale\n+    entries allowed), so most calls only look at a few dozen pairs instead of\n+    every counted pair. Valid as long as counts never grow except for pairs\n+    reported via _add_new_pairs; max() of an empty stats raises as usual.\n+    \"\"\"\n+    pairs, T = hot\n+    if pairs:\n+        hp = list(pairs)\n+        hv = list(map(stats.get, hp, repeat(0)))\n+        top = max(hv)\n+        if top >= T:\n+            # every pair with count >= T is in hot, so all maxima are too\n+            return top, list(compress(hp, map(top.__eq__, hv)))\n+    # (re)build the hot set from the full counts\n+    vals = list(stats.values())\n+    top = max(vals)\n+    if len(vals) > _HOT_PAIRS:\n+        T = sorted(vals, reverse=True)[_HOT_PAIRS - 1]\n+    else:\n+        T = min(vals)\n+    hot[0] = set(compress(stats, map(T.__le__, vals)))\n+    hot[1] = T\n+    return top, list(compress(stats, map(top.__eq__, vals)))\n+\n+def _add_new_pairs(stats, hot, idx):\n+    \"\"\"\n+    After merging into the new token idx: the only pairs whose counts grew\n+    are the brand new ones containing idx, which sit at the end of stats\n+    (dict insertion order); add those reaching the hot threshold.\n+    \"\"\"\n+    pairs, T = hot\n+    for p in reversed(stats):\n+        if idx not in p:\n+            break\n+        if stats[p] >= T:\n+            pairs.add(p)\n+"
+    },
+    {
+      "seq": 9,
+      "kind": "edit",
+      "path": "minbpe/base.py",
+      "start_line": 9,
+      "end_line": 9,
+      "lines_before": 1,
+      "lines_after": 1,
+      "at": 1791664809342,
+      "diff": "--- a/minbpe/base.py\n+++ b/minbpe/base.py\n@@ -9,1 +9,1 @@\n-from itertools import repeat\n+from itertools import compress, repeat"
+    }
+  ],
+  "candidate": null,
+  "replays": [],
+  "verdict": null,
+  "outcome": "no_candidate",
+  "effect": null,
+  "cost": null,
+  "reward": {
+    "v": 1,
+    "accepted": 0,
+    "effect": 0,
+    "fixed_tests": 0,
+    "effect_per_usd": null,
+    "effect_per_sandbox_hour": null,
+    "reverted": false,
+    "inputs": [
+      "outcome"
+    ]
+  },
+  "worker_outcome": null,
+  "journal": null,
+  "provenance": null,
+  "license": {
+    "repo": "https://github.com/karpathy/minbpe",
+    "spdx": "MIT",
+    "name": "MIT License",
+    "url": "https://github.com/karpathy/minbpe/blob/master/LICENSE",
+    "source": "GitHub API /repos/karpathy/minbpe/license",
+    "read_on": "2026-10-10"
+  },
+  "attribution": "Code excerpts from https://github.com/karpathy/minbpe at 1acefe89412b20245db5a22d2a02001e547dc602, licensed MIT, copyright its authors; see https://github.com/karpathy/minbpe/blob/master/LICENSE.",
+  "times": {
+    "started_at": 1791664657999,
+    "ended_at": 1791664809364,
+    "finalized_at": null,
+    "published_at": 1791672043318
+  },
+  "verify": {
+    "session": "/v1/sessions/bb00f80b76269cabbb9b31ba9e51efae8408446af129041df2a77fdfbf7509a0",
+    "candidate": null,
+    "generation": null,
+    "provenance": null,
+    "journal": null
+  }
+}

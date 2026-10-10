@@ -1,0 +1,132 @@
+{
+  "schema": "lineage-episode/1",
+  "episode_id": "2b7340beca6a6597403eb3ccb7778b31bd6a61f67d90bcad7951656c42b10b3b",
+  "seq": 2553,
+  "network": "devnet",
+  "session_id": "04467b494f941912833231c023e026ab43ef5de65ec72b4706e78d8284beef0b",
+  "agent": {
+    "id": "6C8N2z5LwktukWEP6g8sUnf9ky1L9rxyngBLbdomUzHc",
+    "name": null,
+    "hidden": false,
+    "hosted": true,
+    "identity_mode": "purchased",
+    "soul": null
+  },
+  "model": {
+    "provider": null,
+    "models": [],
+    "route": null,
+    "harness": {
+      "name": "scripted",
+      "version": null,
+      "digest": null
+    },
+    "source": "session.proposer",
+    "note": "scripted author: a patch from the recipe's candidate set applied hunk by hunk, no model"
+  },
+  "task": {
+    "recipe": {
+      "recipe_id": "46a0d78dd189aa96c32d8f87402f2288b375c0934af32d036350034feb51f648",
+      "name": "minbpe",
+      "class": "python",
+      "repo": "https://github.com/karpathy/minbpe",
+      "commit": "1acefe89412b20245db5a22d2a02001e547dc602"
+    },
+    "lineage_id": "20651398b7fa2afe214ef9e5b518fc28b043f29003bd379c8f09a104288353a4",
+    "parent_gen_id": "bffd58ca013d2f23300c6e360afd5dc32e8d3170959c23b16530684b7b964ac9",
+    "parent_height": 2,
+    "metrics": [
+      {
+        "name": "train_ir",
+        "kind": "perf",
+        "direction": "lower",
+        "deterministic": true,
+        "min_effect": 0.01
+      },
+      {
+        "name": "encode_ir",
+        "kind": "perf",
+        "direction": "lower",
+        "deterministic": true,
+        "min_effect": 0.01
+      }
+    ],
+    "target": null,
+    "baseline": null
+  },
+  "plan": {
+    "planned": null,
+    "opening_note": null,
+    "source": "session notes"
+  },
+  "hypotheses": [],
+  "actions": [
+    {
+      "seq": 1,
+      "kind": "patch",
+      "label": "applying patch get_stats_count_elements, hunk 1 of 2",
+      "path": "minbpe/base.py",
+      "start_line": 7,
+      "end_line": 12,
+      "lines_before": 6,
+      "lines_after": 14,
+      "at": 1791565652570,
+      "diff": "--- a/minbpe/base.py\n+++ b/minbpe/base.py\n@@ -7,6 +7,14 @@\n-\"\"\"\n-import unicodedata\n-\n-# -----------------------------------------------------------------------------\n-# a few helper functions useful for both BasicTokenizer and RegexTokenizer\n-\n+\"\"\"\n+import unicodedata\n+\n+try:\n+    from _collections import _count_elements\n+except ImportError: # pragma: no cover - pure python fallback\n+    def _count_elements(mapping, iterable):\n+        mapping_get = mapping.get\n+        for elem in iterable:\n+            mapping[elem] = mapping_get(elem, 0) + 1\n+\n+# -----------------------------------------------------------------------------\n+# a few helper functions useful for both BasicTokenizer and RegexTokenizer\n+"
+    },
+    {
+      "seq": 2,
+      "kind": "patch",
+      "label": "applying patch get_stats_count_elements, hunk 2 of 2",
+      "path": "minbpe/base.py",
+      "start_line": 25,
+      "end_line": 32,
+      "lines_before": 8,
+      "lines_after": 9,
+      "at": 1791565652570,
+      "diff": "--- a/minbpe/base.py\n+++ b/minbpe/base.py\n@@ -25,8 +25,9 @@\n-    Optionally allows to update an existing dictionary of counts\n-    \"\"\"\n-    counts = {} if counts is None else counts\n-    for pair in zip(ids, ids[1:]): # iterate consecutive elements\n-        counts[pair] = counts.get(pair, 0) + 1\n-    return counts\n-\n-\n+    Optionally allows to update an existing dictionary of counts\n+    \"\"\"\n+    counts = {} if counts is None else counts\n+    # iterate consecutive elements; _count_elements does\n+    # counts[pair] = counts.get(pair, 0) + 1 for each pair, in C\n+    _count_elements(counts, zip(ids, ids[1:]))\n+    return counts\n+\n+"
+    }
+  ],
+  "candidate": null,
+  "replays": [],
+  "verdict": null,
+  "outcome": "abandoned",
+  "effect": null,
+  "cost": null,
+  "reward": {
+    "v": 1,
+    "accepted": 0,
+    "effect": 0,
+    "fixed_tests": 0,
+    "effect_per_usd": null,
+    "effect_per_sandbox_hour": null,
+    "reverted": false,
+    "inputs": [
+      "outcome"
+    ]
+  },
+  "worker_outcome": null,
+  "journal": null,
+  "provenance": null,
+  "license": {
+    "repo": "https://github.com/karpathy/minbpe",
+    "spdx": "MIT",
+    "name": "MIT License",
+    "url": "https://github.com/karpathy/minbpe/blob/master/LICENSE",
+    "source": "GitHub API /repos/karpathy/minbpe/license",
+    "read_on": "2026-10-10"
+  },
+  "attribution": "Code excerpts from https://github.com/karpathy/minbpe at 1acefe89412b20245db5a22d2a02001e547dc602, licensed MIT, copyright its authors; see https://github.com/karpathy/minbpe/blob/master/LICENSE.",
+  "times": {
+    "started_at": 1791565652733,
+    "ended_at": null,
+    "finalized_at": null,
+    "published_at": 1791669219426
+  },
+  "verify": {
+    "session": "/v1/sessions/04467b494f941912833231c023e026ab43ef5de65ec72b4706e78d8284beef0b",
+    "candidate": null,
+    "generation": null,
+    "provenance": null,
+    "journal": null
+  }
+}

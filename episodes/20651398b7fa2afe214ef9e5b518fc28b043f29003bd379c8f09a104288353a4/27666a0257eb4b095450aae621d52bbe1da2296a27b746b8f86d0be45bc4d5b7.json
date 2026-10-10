@@ -1,0 +1,172 @@
+{
+  "schema": "lineage-episode/1",
+  "episode_id": "27666a0257eb4b095450aae621d52bbe1da2296a27b746b8f86d0be45bc4d5b7",
+  "seq": 2622,
+  "network": "devnet",
+  "session_id": "c8cff53b481ddf32f11eacb5aadc5fd73e01b43e582815d9f00a5abf0464eb73",
+  "agent": {
+    "id": "6C8N2z5LwktukWEP6g8sUnf9ky1L9rxyngBLbdomUzHc",
+    "name": null,
+    "hidden": false,
+    "hosted": true,
+    "identity_mode": "purchased",
+    "soul": null
+  },
+  "model": {
+    "provider": "anthropic",
+    "models": [],
+    "route": null,
+    "harness": {
+      "name": "anthropic",
+      "version": null,
+      "digest": null
+    },
+    "source": "session.proposer"
+  },
+  "task": {
+    "recipe": {
+      "recipe_id": "46a0d78dd189aa96c32d8f87402f2288b375c0934af32d036350034feb51f648",
+      "name": "minbpe",
+      "class": "python",
+      "repo": "https://github.com/karpathy/minbpe",
+      "commit": "1acefe89412b20245db5a22d2a02001e547dc602"
+    },
+    "lineage_id": "20651398b7fa2afe214ef9e5b518fc28b043f29003bd379c8f09a104288353a4",
+    "parent_gen_id": "39832b4ffd75bbb8199a0027d1010e726dd8b4cb4097e1506153f87ac3df4d3d",
+    "parent_height": 6,
+    "metrics": [
+      {
+        "name": "train_ir",
+        "kind": "perf",
+        "direction": "lower",
+        "deterministic": true,
+        "min_effect": 0.01
+      },
+      {
+        "name": "encode_ir",
+        "kind": "perf",
+        "direction": "lower",
+        "deterministic": true,
+        "min_effect": 0.01
+      }
+    ],
+    "target": null,
+    "baseline": null
+  },
+  "plan": {
+    "planned": null,
+    "opening_note": null,
+    "source": "session notes"
+  },
+  "hypotheses": [],
+  "actions": [
+    {
+      "seq": 1,
+      "kind": "list",
+      "path": "minbpe",
+      "count": 5,
+      "at": 1791586257228
+    },
+    {
+      "seq": 2,
+      "kind": "read",
+      "path": "lineage_bench.py",
+      "start_line": 1,
+      "end_line": 107,
+      "content_sha256": "0e575e458ce50ddadd5137d4ad35bdf3dde443e46e4c7a6be1d8011a16d274ca",
+      "at": 1791586257229
+    },
+    {
+      "seq": 3,
+      "kind": "read",
+      "path": "minbpe/base.py",
+      "start_line": 1,
+      "end_line": 211,
+      "content_sha256": "2a9f35dc3072e3596ed1eef9971f17b0e71244b1f59902eddd67ba06af468b94",
+      "at": 1791586259505
+    },
+    {
+      "seq": 4,
+      "kind": "read",
+      "path": "minbpe/regex.py",
+      "start_line": 1,
+      "end_line": 210,
+      "content_sha256": "90b1bafdd38fcc809468d8dd08235800df6ec4aa320fb2d1737d858813bf8221",
+      "at": 1791586259506
+    },
+    {
+      "seq": 5,
+      "kind": "read",
+      "path": "minbpe/basic.py",
+      "start_line": 1,
+      "end_line": 63,
+      "content_sha256": "974553dcf0c903ab485f88bcbcc993e3de7cd01d058d2b0f61775a91cd6c32bf",
+      "at": 1791586259506
+    },
+    {
+      "seq": 6,
+      "kind": "edit",
+      "path": "minbpe/basic.py",
+      "start_line": 12,
+      "end_line": 15,
+      "lines_before": 4,
+      "lines_after": 62,
+      "at": 1791586336789,
+      "diff": "--- a/minbpe/basic.py\n+++ b/minbpe/basic.py\n@@ -12,4 +12,62 @@\n-from .base import Tokenizer, get_stats, merge, apply_merges\n-\n-\n-class BasicTokenizer(Tokenizer):\n+from operator import countOf\n+\n+from .base import Tokenizer, get_stats, merge, apply_merges, _count_elements\n+\n+\n+def merge_update(ids, pair, idx, stats):\n+    \"\"\"\n+    Same result as merge(ids, pair, idx), but also updates stats (pair counts\n+    of ids) in place so that it equals get_stats() of the returned list.\n+    Only the pairs around replaced runs change, so only those are recounted.\n+    \"\"\"\n+    p0, p1 = pair\n+    k = ids.count(p0)\n+    newids = []\n+    extend = newids.extend\n+    append = newids.append\n+    index = ids.index\n+    last = len(ids) - 1\n+    same = p0 == p1\n+    regions = [] # (s, e): old positions [s, e) replaced by consecutive idx\n+    s = e = -1\n+    i = 0\n+    while k:\n+        j = index(p0, i)\n+        k -= 1\n+        if j < last and ids[j+1] == p1:\n+            if same:\n+                k -= 1 # ids[j+1] was an occurrence of p0 too\n+            if j != e:\n+                # not adjacent to the previous replacement: start a new run\n+                if e >= 0:\n+                    regions.append((s, e))\n+                s = j\n+                extend(ids[i:j])\n+            append(idx)\n+            e = i = j + 2\n+        else:\n+            extend(ids[i:j+1])\n+            i = j + 1\n+    if e >= 0:\n+        regions.append((s, e))\n+    extend(ids[i:])\n+    # update the pair counts: drop the old pairs touching each run, add the new\n+    stats_get = stats.get\n+    touched = []\n+    for s, e in regions:\n+        lo = s - 1 if s else 0\n+        old_w = ids[lo:e+1]\n+        for p in zip(old_w, old_w[1:]):\n+            stats[p] -= 1\n+            touched.append(p)\n+        new_w = ids[lo:s]\n+        new_w += [idx] * ((e - s) >> 1)\n+        new_w += ids[e:e+1]\n+        _count_elements(stats, zip(new_w, new_w[1:]))\n+    for p in touched:\n+        if stats_get(p) == 0:\n+            del stats[p]\n+    return newids\n+\n+\n+class BasicTokenizer(Tokenizer):"
+    },
+    {
+      "seq": 7,
+      "kind": "edit",
+      "path": "minbpe/basic.py",
+      "start_line": 88,
+      "end_line": 103,
+      "lines_before": 16,
+      "lines_after": 24,
+      "at": 1791586336793,
+      "diff": "--- a/minbpe/basic.py\n+++ b/minbpe/basic.py\n@@ -88,16 +88,24 @@\n-        vocab = {idx: bytes([idx]) for idx in range(256)} # int -> bytes\n-        for i in range(num_merges):\n-            # count up the number of times every consecutive pair appears\n-            stats = get_stats(ids)\n-            # find the pair with the highest count\n-            pair = max(stats, key=stats.get)\n-            # mint a new token: assign it the next available id\n-            idx = 256 + i\n-            # replace all occurrences of pair in ids with idx\n-            ids = merge(ids, pair, idx)\n-            # save the merge\n-            merges[pair] = idx\n-            vocab[idx] = vocab[pair[0]] + vocab[pair[1]]\n-            # prints\n-            if verbose:\n-                print(f\"merge {i+1}/{num_merges}: {pair} -> {idx} ({vocab[idx]}) had {stats[pair]} occurrences\")\n+        vocab = {idx: bytes([idx]) for idx in range(256)} # int -> bytes\n+        # count up the number of times every consecutive pair appears (once);\n+        # merge_update keeps the counts in sync with ids afterwards\n+        stats = get_stats(ids)\n+        stats_get = stats.get\n+        for i in range(num_merges):\n+            # find the pair with the highest count; ties go to the pair that\n+            # occurs first in ids, which is what max() over a freshly counted\n+            # get_stats(ids) (insertion order = first occurrence) would pick\n+            pair = max(stats, key=stats_get)\n+            top = stats[pair]\n+            if countOf(stats.values(), top) > 1:\n+                cands = {p for p, c in stats.items() if c == top}\n+                pair = next(filter(cands.__contains__, zip(ids, ids[1:])))\n+            # mint a new token: assign it the next available id\n+            idx = 256 + i\n+            # replace all occurrences of pair in ids with idx\n+            ids = merge_update(ids, pair, idx, stats)\n+            # save the merge\n+            merges[pair] = idx\n+            vocab[idx] = vocab[pair[0]] + vocab[pair[1]]\n+            # prints\n+            if verbose:\n+                print(f\"merge {i+1}/{num_merges}: {pair} -> {idx} ({vocab[idx]}) had {top} occurrences\")"
+    }
+  ],
+  "candidate": null,
+  "replays": [],
+  "verdict": null,
+  "outcome": "no_candidate",
+  "effect": null,
+  "cost": null,
+  "reward": {
+    "v": 1,
+    "accepted": 0,
+    "effect": 0,
+    "fixed_tests": 0,
+    "effect_per_usd": null,
+    "effect_per_sandbox_hour": null,
+    "reverted": false,
+    "inputs": [
+      "outcome"
+    ]
+  },
+  "worker_outcome": null,
+  "journal": null,
+  "provenance": null,
+  "license": {
+    "repo": "https://github.com/karpathy/minbpe",
+    "spdx": "MIT",
+    "name": "MIT License",
+    "url": "https://github.com/karpathy/minbpe/blob/master/LICENSE",
+    "source": "GitHub API /repos/karpathy/minbpe/license",
+    "read_on": "2026-10-10"
+  },
+  "attribution": "Code excerpts from https://github.com/karpathy/minbpe at 1acefe89412b20245db5a22d2a02001e547dc602, licensed MIT, copyright its authors; see https://github.com/karpathy/minbpe/blob/master/LICENSE.",
+  "times": {
+    "started_at": 1791586258959,
+    "ended_at": 1791586336813,
+    "finalized_at": null,
+    "published_at": 1791669219426
+  },
+  "verify": {
+    "session": "/v1/sessions/c8cff53b481ddf32f11eacb5aadc5fd73e01b43e582815d9f00a5abf0464eb73",
+    "candidate": null,
+    "generation": null,
+    "provenance": null,
+    "journal": null
+  }
+}

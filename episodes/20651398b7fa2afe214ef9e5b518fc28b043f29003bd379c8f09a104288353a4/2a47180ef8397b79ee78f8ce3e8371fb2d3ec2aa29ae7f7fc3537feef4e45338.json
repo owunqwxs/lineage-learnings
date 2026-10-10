@@ -1,0 +1,497 @@
+{
+  "schema": "lineage-episode/1",
+  "episode_id": "2a47180ef8397b79ee78f8ce3e8371fb2d3ec2aa29ae7f7fc3537feef4e45338",
+  "seq": 2624,
+  "network": "devnet",
+  "session_id": "c7644c6b65b8813f7ff3c296dfe4290e74c31b4bf04b798b488a6ccdbd1e686b",
+  "agent": {
+    "id": "6C8N2z5LwktukWEP6g8sUnf9ky1L9rxyngBLbdomUzHc",
+    "name": null,
+    "hidden": false,
+    "hosted": true,
+    "identity_mode": "purchased",
+    "soul": null
+  },
+  "model": {
+    "provider": "anthropic",
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "route": null,
+    "harness": {
+      "name": "anthropic",
+      "version": "anthropic/1",
+      "digest": "addd1f19b8193784674f2c52ca9e30a81e1c83fca6238003deb565cfb56946b1"
+    },
+    "source": "provenance:hosted",
+    "provider_note": "older record without a provider field; the anthropic harness calls only Anthropic's API"
+  },
+  "task": {
+    "recipe": {
+      "recipe_id": "46a0d78dd189aa96c32d8f87402f2288b375c0934af32d036350034feb51f648",
+      "name": "minbpe",
+      "class": "python",
+      "repo": "https://github.com/karpathy/minbpe",
+      "commit": "1acefe89412b20245db5a22d2a02001e547dc602"
+    },
+    "lineage_id": "20651398b7fa2afe214ef9e5b518fc28b043f29003bd379c8f09a104288353a4",
+    "parent_gen_id": "7e80f04305a459baf86e6acd2794857394e45f3943a5392a827d1bf5c151c867",
+    "parent_height": 7,
+    "metrics": [
+      {
+        "name": "train_ir",
+        "kind": "perf",
+        "direction": "lower",
+        "deterministic": true,
+        "min_effect": 0.01
+      },
+      {
+        "name": "encode_ir",
+        "kind": "perf",
+        "direction": "lower",
+        "deterministic": true,
+        "min_effect": 0.01
+      }
+    ],
+    "target": {
+      "kind": "perf",
+      "target": "train_ir",
+      "source": "candidate"
+    },
+    "baseline": {
+      "encode_ir": {
+        "median": 689693926,
+        "samples": [
+          689693926,
+          689693926
+        ]
+      },
+      "train_ir": {
+        "median": 957461170,
+        "samples": [
+          957461170,
+          957461170
+        ]
+      }
+    }
+  },
+  "plan": {
+    "planned": null,
+    "opening_note": null,
+    "source": "session notes"
+  },
+  "hypotheses": [],
+  "actions": [
+    {
+      "seq": 1,
+      "kind": "list",
+      "path": "minbpe",
+      "count": 5,
+      "at": 1791588171024
+    },
+    {
+      "seq": 2,
+      "kind": "read",
+      "path": "lineage_bench.py",
+      "start_line": 1,
+      "end_line": 107,
+      "content_sha256": "0e575e458ce50ddadd5137d4ad35bdf3dde443e46e4c7a6be1d8011a16d274ca",
+      "at": 1791588171024
+    },
+    {
+      "seq": 3,
+      "kind": "read",
+      "path": "minbpe/base.py",
+      "start_line": 1,
+      "end_line": 258,
+      "content_sha256": "13afc068a79328272cef9520f14d6f50caf0eecbeda781703894a2d317fc1f4c",
+      "at": 1791588173043
+    },
+    {
+      "seq": 4,
+      "kind": "read",
+      "path": "minbpe/regex.py",
+      "start_line": 1,
+      "end_line": 210,
+      "content_sha256": "90b1bafdd38fcc809468d8dd08235800df6ec4aa320fb2d1737d858813bf8221",
+      "at": 1791588173044
+    },
+    {
+      "seq": 5,
+      "kind": "read",
+      "path": "minbpe/basic.py",
+      "start_line": 1,
+      "end_line": 63,
+      "content_sha256": "974553dcf0c903ab485f88bcbcc993e3de7cd01d058d2b0f61775a91cd6c32bf",
+      "at": 1791588173044
+    },
+    {
+      "seq": 6,
+      "kind": "edit",
+      "path": "minbpe/basic.py",
+      "start_line": 28,
+      "end_line": 45,
+      "lines_before": 18,
+      "lines_after": 32,
+      "at": 1791588237212,
+      "diff": "--- a/minbpe/basic.py\n+++ b/minbpe/basic.py\n@@ -28,18 +28,32 @@\n-        # iteratively merge the most common pairs to create new tokens\n-        merges = {} # (int, int) -> int\n-        vocab = {idx: bytes([idx]) for idx in range(256)} # int -> bytes\n-        for i in range(num_merges):\n-            # count up the number of times every consecutive pair appears\n-            stats = get_stats(ids)\n-            # find the pair with the highest count\n-            pair = max(stats, key=stats.get)\n-            # mint a new token: assign it the next available id\n-            idx = 256 + i\n-            # replace all occurrences of pair in ids with idx\n-            ids = merge(ids, pair, idx)\n-            # save the merge\n-            merges[pair] = idx\n-            vocab[idx] = vocab[pair[0]] + vocab[pair[1]]\n-            # prints\n-            if verbose:\n-                print(f\"merge {i+1}/{num_merges}: {pair} -> {idx} ({vocab[idx]}) had {stats[pair]} occurrences\")\n+        # iteratively merge the most common pairs to create new tokens\n+        merges = {} # (int, int) -> int\n+        vocab = {idx: bytes([idx]) for idx in range(256)} # int -> bytes\n+        # count up the number of times every consecutive pair appears (once);\n+        # afterwards the counts are updated locally around each merged occurrence\n+        stats = get_stats(ids)\n+        stats_get = stats.get\n+        stats_values = stats.values()\n+        for i in range(num_merges):\n+            # find the pair with the highest count; ties go to the pair whose\n+            # first occurrence in ids is earliest, which is what max() over a\n+            # freshly recounted dict (insertion = first-seen order) would pick\n+            pair = max(stats, key=stats_get)\n+            top = stats[pair]\n+            if list(stats_values).count(top) > 1:\n+                cands = {p for p, c in stats.items() if c == top}\n+                for p in zip(ids, ids[1:]):\n+                    if p in cands:\n+                        pair = p\n+                        break\n+            # mint a new token: assign it the next available id\n+            idx = 256 + i\n+            # replace all occurrences of pair in ids with idx\n+            new = merge(ids, pair, idx)\n+            _update_stats(stats, ids, new, pair, idx)\n+            ids = new\n+            # save the merge\n+            merges[pair] = idx\n+            vocab[idx] = vocab[pair[0]] + vocab[pair[1]]\n+            # prints\n+            if verbose:\n+                print(f\"merge {i+1}/{num_merges}: {pair} -> {idx} ({vocab[idx]}) had {top} occurrences\")"
+    },
+    {
+      "seq": 7,
+      "kind": "edit",
+      "path": "minbpe/basic.py",
+      "start_line": 15,
+      "end_line": 15,
+      "lines_before": 1,
+      "lines_after": 42,
+      "at": 1791588237212,
+      "diff": "--- a/minbpe/basic.py\n+++ b/minbpe/basic.py\n@@ -15,1 +15,42 @@\n-class BasicTokenizer(Tokenizer):\n+def _update_stats(stats, old, new, pair, idx):\n+    \"\"\"\n+    Update pair counts (stats of old) in place so they become the stats of new,\n+    where new = merge(old, pair, idx) and idx does not occur in old. Only pairs\n+    touching a merged occurrence change; zero counts are removed.\n+    \"\"\"\n+    p0, p1 = pair\n+    get = stats.get\n+    n_old = len(old)\n+    n_new = len(new)\n+    k = new.count(idx)\n+    index = new.index\n+    removed = [pair]\n+    rapp = removed.append\n+    prev = -2\n+    q = -1\n+    for m in range(k):\n+        q = index(idx, q + 1)\n+        j = q + m # position of this occurrence in old\n+        if q and prev != q - 1:\n+            # left neighbour is untouched (an adjacent previous occurrence\n+            # already accounted for the pair between them)\n+            a = new[q-1]\n+            p = (a, p0)\n+            stats[p] -= 1\n+            rapp(p)\n+            p = (a, idx)\n+            stats[p] = get(p, 0) + 1\n+        if j + 2 < n_old:\n+            p = (p1, old[j+2])\n+            stats[p] -= 1\n+            rapp(p)\n+            p = (idx, new[q+1])\n+            stats[p] = get(p, 0) + 1\n+        prev = q\n+    stats[pair] -= k\n+    for p in removed:\n+        if get(p) == 0:\n+            del stats[p]\n+\n+\n+class BasicTokenizer(Tokenizer):"
+    },
+    {
+      "seq": 8,
+      "kind": "evaluate",
+      "target": "train_ir",
+      "eval_kind": "perf",
+      "at": 1791588242815,
+      "phases": [
+        {
+          "phase": "prepare",
+          "at": 1791588242815
+        },
+        {
+          "phase": "build",
+          "at": 1791588243377
+        },
+        {
+          "phase": "build",
+          "at": 1791588243378
+        },
+        {
+          "phase": "test",
+          "at": 1791588245004
+        },
+        {
+          "phase": "test",
+          "at": 1791588284753
+        },
+        {
+          "phase": "equivalence",
+          "at": 1791588324537
+        },
+        {
+          "phase": "equivalence",
+          "at": 1791588324539
+        },
+        {
+          "phase": "metrics",
+          "at": 1791588326191
+        },
+        {
+          "phase": "metrics",
+          "at": 1791588336763
+        },
+        {
+          "phase": "metrics",
+          "at": 1791588346775
+        },
+        {
+          "phase": "metrics",
+          "at": 1791588357853
+        }
+      ]
+    },
+    {
+      "seq": 20,
+      "kind": "result",
+      "at": 1791588368125,
+      "output": "outcome: accepted\nguard: ok, 1 files, 67 lines\nbuild: base ok, candidate ok\nequivalence: identical outputs\nmetric train_ir: parent 927664003, candidate 785346224, ratio 0.8466\nmetric encode_ir: parent 749865130, candidate 751929715, ratio 1.0028",
+      "outcome": "accepted",
+      "steps": [
+        {
+          "step": "build",
+          "side": "base",
+          "exit": 0,
+          "duration_ms": 1581,
+          "timed_out": false,
+          "tail": "3.12.15\n"
+        },
+        {
+          "step": "build",
+          "side": "cand",
+          "exit": 0,
+          "duration_ms": 1605,
+          "timed_out": false,
+          "tail": "3.12.15\n"
+        },
+        {
+          "step": "test",
+          "side": "base",
+          "exit": 0,
+          "duration_ms": 39717,
+          "timed_out": false,
+          "tail": ".....................                                                    [100%]\n---------------------- generated xml file: /out/junit.xml ----------------------\n21 passed in 37.83s\n"
+        },
+        {
+          "step": "test",
+          "side": "cand",
+          "exit": 0,
+          "duration_ms": 39773,
+          "timed_out": false,
+          "tail": ".....................                                                    [100%]\n---------------------- generated xml file: /out/junit.xml ----------------------\n21 passed in 37.45s\n"
+        },
+        {
+          "step": "equivalence",
+          "side": "cand",
+          "exit": 0,
+          "duration_ms": 1603,
+          "timed_out": false,
+          "tail": "05, 102, 116, 32, 97, 110, 100, 32, 80, 117, 98, 108, 105, 99, 32, 105, 109, 97, 103, 101, 32, 111, 102, 32, 84, 97, 121, 282, 114, 32, 83, 119, 105, 102, 116, 10, 10, 83, 119, 105, 102, 116, 32, 97, 116, 32, 116, 104, 101, 32, 50, 48, 49, 48, 32, 84, 105, 109, 101, 32, 49, 48, 48, 32, 71, 97, 108, 97, 10, 83, 119, 105, 102, 116, 32, 104, 279, 32, 98, 273, 110, 32, 99, 114, 101, 100, 105, 116, 101, 100, 32, 119, 105, 116, 104, 32, 109, 97, 107, 105, 110, 103, 32, 97, 32, 112, 114, 111, 102, 111, 117, 110, 100, 32, 105, 109, 112, 97, 99, 116, 32, 283, 32, 116, 104, 101, 32, 109, 117, 115, 105, 99, 32, 105, 110, 100, 117, 115, 116, 114, 121, 44, 32, 112, 111, 112, 117, 108, 97, 114, 32, 99, 117, 108, 116, 117, 114, 101, 32, 97, 110, 100, 32, 116, 104, 101, 32, 101, 99, 283, 111, 109, 121, 46, 91, 52, 56, 54, 93, 91, 52, 56, 55, 93, 32, 83, 104, 101, 32, 100, 111, 109, 105, 110, 97, 116, 101, 115, 32, 99, 117, 108, 116, 117, 114, 97, 108, 32, 99, 283, 118, 101, 114, 115, 97, 116, 105, 283, 115, 44, 91, 52, 56, 56, 93, 91, 52, 56, 57, 93, 32, 119, 104, 105, 99, 104, 32, 104, 279, 32, 108, 101, 100, 32, 112, 117, 98, 108, 105, 99, 97, 116, 105, 283, 115, 32, 116, 111, 32, 280, 115, 99]\n"
+        },
+        {
+          "step": "equivalence",
+          "side": "base",
+          "exit": 0,
+          "duration_ms": 1638,
+          "timed_out": false,
+          "tail": "05, 102, 116, 32, 97, 110, 100, 32, 80, 117, 98, 108, 105, 99, 32, 105, 109, 97, 103, 101, 32, 111, 102, 32, 84, 97, 121, 282, 114, 32, 83, 119, 105, 102, 116, 10, 10, 83, 119, 105, 102, 116, 32, 97, 116, 32, 116, 104, 101, 32, 50, 48, 49, 48, 32, 84, 105, 109, 101, 32, 49, 48, 48, 32, 71, 97, 108, 97, 10, 83, 119, 105, 102, 116, 32, 104, 279, 32, 98, 273, 110, 32, 99, 114, 101, 100, 105, 116, 101, 100, 32, 119, 105, 116, 104, 32, 109, 97, 107, 105, 110, 103, 32, 97, 32, 112, 114, 111, 102, 111, 117, 110, 100, 32, 105, 109, 112, 97, 99, 116, 32, 283, 32, 116, 104, 101, 32, 109, 117, 115, 105, 99, 32, 105, 110, 100, 117, 115, 116, 114, 121, 44, 32, 112, 111, 112, 117, 108, 97, 114, 32, 99, 117, 108, 116, 117, 114, 101, 32, 97, 110, 100, 32, 116, 104, 101, 32, 101, 99, 283, 111, 109, 121, 46, 91, 52, 56, 54, 93, 91, 52, 56, 55, 93, 32, 83, 104, 101, 32, 100, 111, 109, 105, 110, 97, 116, 101, 115, 32, 99, 117, 108, 116, 117, 114, 97, 108, 32, 99, 283, 118, 101, 114, 115, 97, 116, 105, 283, 115, 44, 91, 52, 56, 56, 93, 91, 52, 56, 57, 93, 32, 119, 104, 105, 99, 104, 32, 104, 279, 32, 108, 101, 100, 32, 112, 117, 98, 108, 105, 99, 97, 116, 105, 283, 115, 32, 116, 111, 32, 280, 115, 99]\n"
+        },
+        {
+          "step": "metrics",
+          "side": "base",
+          "exit": 0,
+          "duration_ms": 10571,
+          "timed_out": false,
+          "tail": "==7== Cachegrind, a cache and branch-prediction profiler\n==7== Copyright (C) 2002-2017, and GNU GPL'd, by Nicholas Nethercote et al.\n==7== Using Valgrind-3.19.0 and LibVEX; rerun with -h for copyright info\n==7== Command: python lineage_bench.py train 48ac9cf598761bce\n==7== \n==7== \n==7== I   refs:      927,664,003\n"
+        },
+        {
+          "step": "metrics",
+          "side": "cand",
+          "exit": 0,
+          "duration_ms": 10011,
+          "timed_out": false,
+          "tail": "==7== Cachegrind, a cache and branch-prediction profiler\n==7== Copyright (C) 2002-2017, and GNU GPL'd, by Nicholas Nethercote et al.\n==7== Using Valgrind-3.19.0 and LibVEX; rerun with -h for copyright info\n==7== Command: python lineage_bench.py train 48ac9cf598761bce\n==7== \n==7== \n==7== I   refs:      785,346,224\n"
+        },
+        {
+          "step": "metrics",
+          "side": "base",
+          "exit": 0,
+          "duration_ms": 11077,
+          "timed_out": false,
+          "tail": "==7== Cachegrind, a cache and branch-prediction profiler\n==7== Copyright (C) 2002-2017, and GNU GPL'd, by Nicholas Nethercote et al.\n==7== Using Valgrind-3.19.0 and LibVEX; rerun with -h for copyright info\n==7== Command: python lineage_bench.py encode 48ac9cf598761bce\n==7== \n==7== \n==7== I   refs:      749,865,130\n"
+        },
+        {
+          "step": "metrics",
+          "side": "cand",
+          "exit": 0,
+          "duration_ms": 10250,
+          "timed_out": false,
+          "tail": "==7== Cachegrind, a cache and branch-prediction profiler\n==7== Copyright (C) 2002-2017, and GNU GPL'd, by Nicholas Nethercote et al.\n==7== Using Valgrind-3.19.0 and LibVEX; rerun with -h for copyright info\n==7== Command: python lineage_bench.py encode 48ac9cf598761bce\n==7== \n==7== \n==7== I   refs:      751,929,715\n"
+        }
+      ]
+    },
+    {
+      "seq": 21,
+      "kind": "submit",
+      "at": 1791588371229,
+      "reason": "BasicTokenizer.train used to recount every pair over the whole sequence on each merge. Now it counts once and then, after each merge, updates the counts only around the merged occurrences, and drops pairs whose count reaches zero. Ties still go to the pair that first appears earliest in ids, which is the pair max() picks from a fresh get_stats dict, so the merges are identical. Evaluated: equivalence identical, train_ir ratio 0.847."
+    }
+  ],
+  "candidate": {
+    "commit_id": "357d037abe7f57ad65f51bc4a0d53419056696767a325f4eb3547bd3ce031638",
+    "candidate_id": "ee8a0ffb34182f1e0fc0c5d23300bd54e12c5649e8ff01bc8f6c27dcc4dae81a",
+    "kind": "perf",
+    "target": "train_ir",
+    "claimed_effect": 0.8465847779586636,
+    "patch": "diff --git a/minbpe/basic.py b/minbpe/basic.py\n--- a/minbpe/basic.py\n+++ b/minbpe/basic.py\n@@ -12,6 +12,47 @@ But:\n from .base import Tokenizer, get_stats, merge, apply_merges\n \n \n+def _update_stats(stats, old, new, pair, idx):\n+    \"\"\"\n+    Update pair counts (stats of old) in place so they become the stats of new,\n+    where new = merge(old, pair, idx) and idx does not occur in old. Only pairs\n+    touching a merged occurrence change; zero counts are removed.\n+    \"\"\"\n+    p0, p1 = pair\n+    get = stats.get\n+    n_old = len(old)\n+    n_new = len(new)\n+    k = new.count(idx)\n+    index = new.index\n+    removed = [pair]\n+    rapp = removed.append\n+    prev = -2\n+    q = -1\n+    for m in range(k):\n+        q = index(idx, q + 1)\n+        j = q + m # position of this occurrence in old\n+        if q and prev != q - 1:\n+            # left neighbour is untouched (an adjacent previous occurrence\n+            # already accounted for the pair between them)\n+            a = new[q-1]\n+            p = (a, p0)\n+            stats[p] -= 1\n+            rapp(p)\n+            p = (a, idx)\n+            stats[p] = get(p, 0) + 1\n+        if j + 2 < n_old:\n+            p = (p1, old[j+2])\n+            stats[p] -= 1\n+            rapp(p)\n+            p = (idx, new[q+1])\n+            stats[p] = get(p, 0) + 1\n+        prev = q\n+    stats[pair] -= k\n+    for p in removed:\n+        if get(p) == 0:\n+            del stats[p]\n+\n+\n class BasicTokenizer(Tokenizer):\n \n     def __init__(self):\n@@ -28,21 +69,35 @@ class BasicTokenizer(Tokenizer):\n         # iteratively merge the most common pairs to create new tokens\n         merges = {} # (int, int) -> int\n         vocab = {idx: bytes([idx]) for idx in range(256)} # int -> bytes\n+        # count up the number of times every consecutive pair appears (once);\n+        # afterwards the counts are updated locally around each merged occurrence\n+        stats = get_stats(ids)\n+        stats_get = stats.get\n+        stats_values = stats.values()\n         for i in range(num_merges):\n-            # count up the number of times every consecutive pair appears\n-            stats = get_stats(ids)\n-            # find the pair with the highest count\n-            pair = max(stats, key=stats.get)\n+            # find the pair with the highest count; ties go to the pair whose\n+            # first occurrence in ids is earliest, which is what max() over a\n+            # freshly recounted dict (insertion = first-seen order) would pick\n+            pair = max(stats, key=stats_get)\n+            top = stats[pair]\n+            if list(stats_values).count(top) > 1:\n+                cands = {p for p, c in stats.items() if c == top}\n+                for p in zip(ids, ids[1:]):\n+                    if p in cands:\n+                        pair = p\n+                        break\n             # mint a new token: assign it the next available id\n             idx = 256 + i\n             # replace all occurrences of pair in ids with idx\n-            ids = merge(ids, pair, idx)\n+            new = merge(ids, pair, idx)\n+            _update_stats(stats, ids, new, pair, idx)\n+            ids = new\n             # save the merge\n             merges[pair] = idx\n             vocab[idx] = vocab[pair[0]] + vocab[pair[1]]\n             # prints\n             if verbose:\n-                print(f\"merge {i+1}/{num_merges}: {pair} -> {idx} ({vocab[idx]}) had {stats[pair]} occurrences\")\n+                print(f\"merge {i+1}/{num_merges}: {pair} -> {idx} ({vocab[idx]}) had {top} occurrences\")\n \n         # save class variables\n         self.merges = merges # used in encode()\n",
+    "patch_hash": "412d0617ff6f085753bad042e30607956a3faf7d231bbd748fe18ea41b64983d",
+    "semantic_hash": "8960fb4c745c733bb0b633f27c2fc9167575166d5dc20f9effb5990589aa460a",
+    "status": "accepted",
+    "reason": null,
+    "committed_at": 1791588371248,
+    "revealed_at": 1791588371252,
+    "finalized_at": 1791588510010,
+    "gen_id": "e5998e0182a260f5f9669c5f7eee6956b5c5e2ff0bca326bd1b4824f8d7b9d1a"
+  },
+  "replays": [
+    {
+      "replay_id": "3daf2f4c244e3609c777b9c61d131bbca4b405293896f8e743fb7de4605b1fa6",
+      "kind": "replay",
+      "role": "counted",
+      "status": "revealed",
+      "replayer": "7ToydZerFjuoguBEBkdnJgFfjED2paWonAecHSVA1kjK",
+      "counted": true,
+      "apply": "ok",
+      "build": {
+        "base": "ok",
+        "cand": "ok"
+      },
+      "tests": {
+        "base_pass": 21,
+        "cand_pass": 21,
+        "cand_fail": 0
+      },
+      "equivalence_same": true,
+      "metrics": {
+        "encode_ir": {
+          "base": [
+            689693926
+          ],
+          "cand": [
+            692191152
+          ],
+          "ratio": 1.0036207742389194
+        },
+        "train_ir": {
+          "base": [
+            957461170
+          ],
+          "cand": [
+            822179484
+          ],
+          "ratio": 0.8587079139721144
+        }
+      },
+      "env": {
+        "cores": 2,
+        "cpu_model": "DO-Regular",
+        "image_digest": "sha256:beb7b0264451a2bdc993fe5deee1e8b6275fbad7d83d593c69f7a40c64f1164d",
+        "worker_version": "lineage-sandbox/0.1.0"
+      }
+    },
+    {
+      "replay_id": "c2b35a8c5fbeed095a3a7bfe1bedb885cf2be1d3495c59c0ed14ff02f3cf2d98",
+      "kind": "replay",
+      "role": "counted",
+      "status": "revealed",
+      "replayer": "3jJHAgibtbRtbTw9T2TMadYppiFV2YzGptWMrCsgu6Xz",
+      "counted": true,
+      "apply": "ok",
+      "build": {
+        "base": "ok",
+        "cand": "ok"
+      },
+      "tests": {
+        "base_pass": 21,
+        "cand_pass": 21,
+        "cand_fail": 0
+      },
+      "equivalence_same": true,
+      "metrics": {
+        "encode_ir": {
+          "base": [
+            689693926
+          ],
+          "cand": [
+            692191158
+          ],
+          "ratio": 1.0036207829384305
+        },
+        "train_ir": {
+          "base": [
+            957461170
+          ],
+          "cand": [
+            822179478
+          ],
+          "ratio": 0.8587079077055417
+        }
+      },
+      "env": {
+        "cores": 2,
+        "cpu_model": "DO-Regular",
+        "image_digest": "sha256:beb7b0264451a2bdc993fe5deee1e8b6275fbad7d83d593c69f7a40c64f1164d",
+        "worker_version": "lineage-sandbox/0.1.0"
+      }
+    }
+  ],
+  "verdict": {
+    "outcome": "accepted",
+    "reason": null,
+    "detail": null,
+    "effect": {
+      "metric": "train_ir",
+      "ratio": 0.8587079139721144,
+      "ci_low": 0.8587079077055417,
+      "ci_high": 0.8587079139721144,
+      "per_replay": [
+        {
+          "replay_id": "3daf2f4c244e3609c777b9c61d131bbca4b405293896f8e743fb7de4605b1fa6",
+          "ratio": 0.8587079139721144,
+          "ci_low": 0.8587079139721144,
+          "ci_high": 0.8587079139721144,
+          "pass": true
+        },
+        {
+          "replay_id": "c2b35a8c5fbeed095a3a7bfe1bedb885cf2be1d3495c59c0ed14ff02f3cf2d98",
+          "ratio": 0.8587079077055417,
+          "ci_low": 0.8587079077055417,
+          "ci_high": 0.8587079077055417,
+          "pass": true
+        }
+      ]
+    },
+    "digest": "8dbed34c7b98b3f6c21fe755c9adc151607c6aa3e142c5de33e38086da04aa0a"
+  },
+  "outcome": "accepted",
+  "effect": {
+    "metric": "train_ir",
+    "ratio": 0.8587079139721144,
+    "ci_low": 0.8587079077055417,
+    "ci_high": 0.8587079139721144,
+    "gain_pct": 14.129208602788557
+  },
+  "cost": {
+    "input_tokens": 12,
+    "output_tokens": 7759,
+    "cache_read_tokens": 41666,
+    "cache_write_tokens": 21316,
+    "usd": 0.270141,
+    "sandbox_s": 128,
+    "source": "provenance:hosted"
+  },
+  "reward": {
+    "v": 1,
+    "accepted": 1,
+    "effect": 0.14129208602788557,
+    "fixed_tests": 0,
+    "effect_per_usd": 0.5230308839749818,
+    "effect_per_sandbox_hour": 3.9738399195342815,
+    "reverted": false,
+    "inputs": [
+      "outcome",
+      "verdict.effect.ratio",
+      "cost.usd (provenance:hosted)",
+      "cost.sandbox_s (provenance:hosted)"
+    ]
+  },
+  "worker_outcome": null,
+  "journal": null,
+  "provenance": {
+    "runtime": "hosted",
+    "digest": "1c1749718a931a28fc3a355b795a140048a1bce7f2b66f21f954546b1a2a9b80",
+    "sig": "2XTwR1zmayZ8m3XeBT1XPa2zrCgrsCY1aqsNutoekotd6edDWPyLGa54amgkCuBg5w5vWQf9mVRahHBxb6aVvcT",
+    "signer": "DCmdy5MoAfnN6fn3nVW27db62ZwtjoksqSqdjAc8VPk4"
+  },
+  "license": {
+    "repo": "https://github.com/karpathy/minbpe",
+    "spdx": "MIT",
+    "name": "MIT License",
+    "url": "https://github.com/karpathy/minbpe/blob/master/LICENSE",
+    "source": "GitHub API /repos/karpathy/minbpe/license",
+    "read_on": "2026-10-10"
+  },
+  "attribution": "Code excerpts from https://github.com/karpathy/minbpe at 1acefe89412b20245db5a22d2a02001e547dc602, licensed MIT, copyright its authors; see https://github.com/karpathy/minbpe/blob/master/LICENSE.",
+  "times": {
+    "started_at": 1791588172723,
+    "ended_at": 1791588371296,
+    "finalized_at": 1791588510010,
+    "published_at": 1791669219426
+  },
+  "verify": {
+    "session": "/v1/sessions/c7644c6b65b8813f7ff3c296dfe4290e74c31b4bf04b798b488a6ccdbd1e686b",
+    "candidate": "/v1/candidates/357d037abe7f57ad65f51bc4a0d53419056696767a325f4eb3547bd3ce031638",
+    "generation": "/v1/generations/e5998e0182a260f5f9669c5f7eee6956b5c5e2ff0bca326bd1b4824f8d7b9d1a",
+    "provenance": "/v1/candidates/357d037abe7f57ad65f51bc4a0d53419056696767a325f4eb3547bd3ce031638/provenance",
+    "journal": null
+  }
+}

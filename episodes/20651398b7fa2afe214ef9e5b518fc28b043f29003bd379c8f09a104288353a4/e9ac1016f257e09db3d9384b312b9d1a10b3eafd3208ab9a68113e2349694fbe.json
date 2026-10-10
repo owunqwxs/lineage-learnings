@@ -1,0 +1,598 @@
+{
+  "schema": "lineage-episode/1",
+  "episode_id": "e9ac1016f257e09db3d9384b312b9d1a10b3eafd3208ab9a68113e2349694fbe",
+  "seq": 2616,
+  "network": "devnet",
+  "session_id": "a68ae4a17decb3f6f57111fab5f6be4bd4733e62be0d0e7bb4a005dd3f96caf9",
+  "agent": {
+    "id": "6C8N2z5LwktukWEP6g8sUnf9ky1L9rxyngBLbdomUzHc",
+    "name": null,
+    "hidden": false,
+    "hosted": true,
+    "identity_mode": "purchased",
+    "soul": null
+  },
+  "model": {
+    "provider": "anthropic",
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "route": null,
+    "harness": {
+      "name": "anthropic",
+      "version": "anthropic/1",
+      "digest": "addd1f19b8193784674f2c52ca9e30a81e1c83fca6238003deb565cfb56946b1"
+    },
+    "source": "provenance:hosted",
+    "provider_note": "older record without a provider field; the anthropic harness calls only Anthropic's API"
+  },
+  "task": {
+    "recipe": {
+      "recipe_id": "46a0d78dd189aa96c32d8f87402f2288b375c0934af32d036350034feb51f648",
+      "name": "minbpe",
+      "class": "python",
+      "repo": "https://github.com/karpathy/minbpe",
+      "commit": "1acefe89412b20245db5a22d2a02001e547dc602"
+    },
+    "lineage_id": "20651398b7fa2afe214ef9e5b518fc28b043f29003bd379c8f09a104288353a4",
+    "parent_gen_id": "e4e2a74d00e7c70a32b99bbed6e7ca3dccc228357c3af5dbb36d746cf36cf150",
+    "parent_height": 3,
+    "metrics": [
+      {
+        "name": "train_ir",
+        "kind": "perf",
+        "direction": "lower",
+        "deterministic": true,
+        "min_effect": 0.01
+      },
+      {
+        "name": "encode_ir",
+        "kind": "perf",
+        "direction": "lower",
+        "deterministic": true,
+        "min_effect": 0.01
+      }
+    ],
+    "target": {
+      "kind": "perf",
+      "target": "train_ir",
+      "source": "candidate"
+    },
+    "baseline": null
+  },
+  "plan": {
+    "planned": null,
+    "opening_note": "Now update imports and the regex train loop (drop chunks that can no longer produce pairs; skip chunks lacking the pair).",
+    "source": "session notes"
+  },
+  "hypotheses": [
+    "Now update imports and the regex train loop (drop chunks that can no longer produce pairs; skip chunks lacking the pair)."
+  ],
+  "actions": [
+    {
+      "seq": 1,
+      "kind": "list",
+      "path": "minbpe",
+      "count": 5,
+      "at": 1791584826967
+    },
+    {
+      "seq": 2,
+      "kind": "read",
+      "path": "lineage_bench.py",
+      "start_line": 1,
+      "end_line": 107,
+      "content_sha256": "0e575e458ce50ddadd5137d4ad35bdf3dde443e46e4c7a6be1d8011a16d274ca",
+      "at": 1791584826967
+    },
+    {
+      "seq": 3,
+      "kind": "read",
+      "path": "minbpe/base.py",
+      "start_line": 1,
+      "end_line": 175,
+      "content_sha256": "0e0276bd46177664540ec004151f4dc06e876f7343316319d0ad94f60e2d777a",
+      "at": 1791584828981
+    },
+    {
+      "seq": 4,
+      "kind": "read",
+      "path": "minbpe/regex.py",
+      "start_line": 1,
+      "end_line": 177,
+      "content_sha256": "ea5631439555d0c465a6c494cf7b420425270b853b0519feb48eda9457af9af1",
+      "at": 1791584828982
+    },
+    {
+      "seq": 5,
+      "kind": "read",
+      "path": "minbpe/basic.py",
+      "start_line": 1,
+      "end_line": 75,
+      "content_sha256": "d240f8b54f25d8c65e81f3da1cc7c3a390a7692cdbf62d6ff6d0c1cba1b031b8",
+      "at": 1791584828982
+    },
+    {
+      "seq": 6,
+      "kind": "edit",
+      "path": "minbpe/base.py",
+      "start_line": 40,
+      "end_line": 50,
+      "lines_before": 11,
+      "lines_after": 45,
+      "at": 1791584876578,
+      "diff": "--- a/minbpe/base.py\n+++ b/minbpe/base.py\n@@ -40,11 +40,45 @@\n-    newids = []\n-    i = 0\n-    while i < len(ids):\n-        # if not at the very last position AND the pair matches, replace it\n-        if ids[i] == pair[0] and i < len(ids) - 1 and ids[i+1] == pair[1]:\n-            newids.append(idx)\n-            i += 2\n-        else:\n-            newids.append(ids[i])\n-            i += 1\n-    return newids\n+    p0, p1 = pair\n+    # jump between occurrences of p0 with list.index (a C scan) and copy the\n+    # untouched runs in between with slices; scanning left to right and\n+    # skipping past each replaced pair gives the same non-overlapping result\n+    remaining = ids.count(p0)\n+    if not remaining:\n+        return list(ids)\n+    newids = []\n+    index = ids.index\n+    last = len(ids) - 1\n+    start = i = 0\n+    while remaining:\n+        j = index(p0, i)\n+        if j == last:\n+            break\n+        if ids[j+1] == p1:\n+            newids.extend(ids[start:j])\n+            newids.append(idx)\n+            start = i = j + 2\n+            # with p0 == p1 the skipped element was an occurrence of p0 too\n+            remaining -= 2 if p0 == p1 else 1\n+        else:\n+            i = j + 1\n+            remaining -= 1\n+    newids.extend(ids[start:])\n+    return newids\n+\n+\n+def encode_ids(ids, merges):\n+    \"\"\"\n+    Repeatedly merge the pair with the lowest merge index in ids, until no\n+    consecutive pair of ids is in merges. Returns the resulting list.\n+    \"\"\"\n+    get = merges.get\n+    inf = float(\"inf\")\n+    while len(ids) >= 2:\n+        # rank of every consecutive pair, in order; the first minimum is the\n+        # pair that min() over the first-seen pair counts would pick\n+        ranks = list(map(get, zip(ids, ids[1:]), repeat(inf)))\n+        rank = min(ranks)\n+        if rank == inf:\n+            break # nothing else can be merged anymore\n+        j = ranks.index(rank)\n+        ids = merge(ids, (ids[j], ids[j+1]), rank)\n+    return ids"
+    },
+    {
+      "seq": 7,
+      "kind": "edit",
+      "path": "minbpe/base.py",
+      "start_line": 8,
+      "end_line": 9,
+      "lines_before": 2,
+      "lines_after": 3,
+      "at": 1791584887524,
+      "diff": "--- a/minbpe/base.py\n+++ b/minbpe/base.py\n@@ -8,2 +8,3 @@\n-import unicodedata\n-\n+import unicodedata\n+from itertools import repeat\n+"
+    },
+    {
+      "seq": 8,
+      "kind": "edit",
+      "path": "minbpe/regex.py",
+      "start_line": 102,
+      "end_line": 116,
+      "lines_before": 15,
+      "lines_after": 2,
+      "at": 1791584887526,
+      "diff": "--- a/minbpe/regex.py\n+++ b/minbpe/regex.py\n@@ -102,15 +102,2 @@\n-        ids = list(text_bytes)\n-        while len(ids) >= 2:\n-            # find the pair with the lowest merge index\n-            stats = get_stats(ids)\n-            pair = min(stats, key=lambda p: self.merges.get(p, float(\"inf\")))\n-            # subtle: if there are no more merges available, the key will\n-            # result in an inf for every single pair, and the min will be\n-            # just the first pair in the list, arbitrarily\n-            # we can detect this terminating case by a membership check\n-            if pair not in self.merges:\n-                break # nothing else can be merged anymore\n-            # otherwise let's merge the best pair (lowest merge index)\n-            idx = self.merges[pair]\n-            ids = merge(ids, pair, idx)\n-        return ids\n+        # then repeatedly merge the pair with the lowest merge index\n+        return encode_ids(list(text_bytes), self.merges)"
+    },
+    {
+      "seq": 9,
+      "kind": "edit",
+      "path": "minbpe/basic.py",
+      "start_line": 60,
+      "end_line": 74,
+      "lines_before": 15,
+      "lines_after": 3,
+      "at": 1791584887526,
+      "diff": "--- a/minbpe/basic.py\n+++ b/minbpe/basic.py\n@@ -60,15 +60,3 @@\n-        ids = list(text_bytes) # list of integers in range 0..255\n-        while len(ids) >= 2:\n-            # find the pair with the lowest merge index\n-            stats = get_stats(ids)\n-            pair = min(stats, key=lambda p: self.merges.get(p, float(\"inf\")))\n-            # subtle: if there are no more merges available, the key will\n-            # result in an inf for every single pair, and the min will be\n-            # just the first pair in the list, arbitrarily\n-            # we can detect this terminating case by a membership check\n-            if pair not in self.merges:\n-                break # nothing else can be merged anymore\n-            # otherwise let's merge the best pair (lowest merge index)\n-            idx = self.merges[pair]\n-            ids = merge(ids, pair, idx)\n-        return ids\n+        ids = list(text_bytes) # list of integers in range 0..255\n+        # repeatedly merge the pair with the lowest merge index\n+        return encode_ids(ids, self.merges)"
+    },
+    {
+      "seq": 10,
+      "kind": "note",
+      "at": 1791584896841,
+      "text": "Now update imports and the regex train loop (drop chunks that can no longer produce pairs; skip chunks lacking the pair)."
+    },
+    {
+      "seq": 11,
+      "kind": "edit",
+      "path": "minbpe/basic.py",
+      "start_line": 12,
+      "end_line": 12,
+      "lines_before": 1,
+      "lines_after": 1,
+      "at": 1791584896843,
+      "diff": "--- a/minbpe/basic.py\n+++ b/minbpe/basic.py\n@@ -12,1 +12,1 @@\n-from .base import Tokenizer, get_stats, merge\n+from .base import Tokenizer, get_stats, merge, encode_ids"
+    },
+    {
+      "seq": 12,
+      "kind": "edit",
+      "path": "minbpe/regex.py",
+      "start_line": 13,
+      "end_line": 13,
+      "lines_before": 1,
+      "lines_after": 2,
+      "at": 1791584896843,
+      "diff": "--- a/minbpe/regex.py\n+++ b/minbpe/regex.py\n@@ -13,1 +13,2 @@\n-from .base import Tokenizer, get_stats, merge\n+from .base import Tokenizer, merge, encode_ids\n+from .base import _count_elements"
+    },
+    {
+      "seq": 13,
+      "kind": "edit",
+      "path": "minbpe/regex.py",
+      "start_line": 59,
+      "end_line": 68,
+      "lines_before": 10,
+      "lines_after": 27,
+      "at": 1791584896843,
+      "diff": "--- a/minbpe/regex.py\n+++ b/minbpe/regex.py\n@@ -59,10 +59,27 @@\n-            stats = {}\n-            for chunk_ids, w in zip(ids, weights):\n-                for p in zip(chunk_ids, chunk_ids[1:]):\n-                    stats[p] = stats.get(p, 0) + w\n-            # find the pair with the highest count\n-            pair = max(stats, key=stats.get)\n-            # mint a new token: assign it the next available id\n-            idx = 256 + i\n-            # replace all occurrences of pair in ids with idx\n-            ids = [merge(chunk_ids, pair, idx) for chunk_ids in ids]\n+            # (chunks of a single token have no pairs and never get longer, so\n+            # they are dropped; this leaves the counts and their order unchanged)\n+            if any(len(chunk_ids) < 2 for chunk_ids in ids):\n+                kept = [k for k, chunk_ids in enumerate(ids) if len(chunk_ids) >= 2]\n+                ids = [ids[k] for k in kept]\n+                weights = [weights[k] for k in kept]\n+            stats = {}\n+            stats_get = stats.get\n+            for chunk_ids, w in zip(ids, weights):\n+                if w == 1:\n+                    # same as the loop below with w == 1, done in C\n+                    _count_elements(stats, zip(chunk_ids, chunk_ids[1:]))\n+                else:\n+                    for p in zip(chunk_ids, chunk_ids[1:]):\n+                        stats[p] = stats_get(p, 0) + w\n+            if not stats:\n+                # every chunk is a single token: same error max() raised before\n+                raise ValueError(\"max() iterable argument is empty\")\n+            # find the pair with the highest count\n+            pair = max(stats, key=stats_get)\n+            # mint a new token: assign it the next available id\n+            idx = 256 + i\n+            # replace all occurrences of pair in ids with idx\n+            # (chunks without pair[0] are left as they are)\n+            p0 = pair[0]\n+            ids = [merge(chunk_ids, pair, idx) if p0 in chunk_ids else chunk_ids\n+                   for chunk_ids in ids]"
+    },
+    {
+      "seq": 14,
+      "kind": "edit",
+      "path": "minbpe/regex.py",
+      "start_line": 74,
+      "end_line": 77,
+      "lines_before": 4,
+      "lines_after": 1,
+      "at": 1791584901740,
+      "diff": "--- a/minbpe/regex.py\n+++ b/minbpe/regex.py\n@@ -74,4 +0,0 @@\n-            if not stats:\n-                # every chunk is a single token: same error max() raised before\n-                raise ValueError(\"max() iterable argument is empty\")\n-"
+    },
+    {
+      "seq": 15,
+      "kind": "search",
+      "query": "get_stats|import merge|\\bmerge\\(",
+      "matches": 12,
+      "at": 1791584901770
+    },
+    {
+      "seq": 16,
+      "kind": "edit",
+      "path": "minbpe/regex.py",
+      "start_line": 13,
+      "end_line": 14,
+      "lines_before": 2,
+      "lines_after": 1,
+      "at": 1791584905901,
+      "diff": "--- a/minbpe/regex.py\n+++ b/minbpe/regex.py\n@@ -13,2 +13,1 @@\n-from .base import Tokenizer, merge, encode_ids\n-from .base import _count_elements\n+from .base import Tokenizer, get_stats, merge, encode_ids, _count_elements"
+    },
+    {
+      "seq": 17,
+      "kind": "evaluate",
+      "target": "train_ir",
+      "eval_kind": "perf",
+      "at": 1791584905918,
+      "phases": [
+        {
+          "phase": "prepare",
+          "at": 1791584905918
+        },
+        {
+          "phase": "build",
+          "at": 1791584906456
+        },
+        {
+          "phase": "build",
+          "at": 1791584906466
+        },
+        {
+          "phase": "test",
+          "at": 1791584909821
+        },
+        {
+          "phase": "test",
+          "at": 1791584957252
+        },
+        {
+          "phase": "equivalence",
+          "at": 1791585001153
+        },
+        {
+          "phase": "equivalence",
+          "at": 1791585001157
+        },
+        {
+          "phase": "metrics",
+          "at": 1791585004126
+        },
+        {
+          "phase": "metrics",
+          "at": 1791585023604
+        },
+        {
+          "phase": "metrics",
+          "at": 1791585041301
+        },
+        {
+          "phase": "metrics",
+          "at": 1791585058670
+        }
+      ]
+    },
+    {
+      "seq": 29,
+      "kind": "result",
+      "at": 1791585070765,
+      "output": "outcome: accepted\nguard: ok, 3 files, 108 lines\nbuild: base ok, candidate ok\nequivalence: identical outputs\nmetric train_ir: parent 2253170140, candidate 1731763153, ratio 0.7686\nmetric encode_ir: parent 1848214041, candidate 1022183239, ratio 0.5531",
+      "outcome": "accepted",
+      "steps": [
+        {
+          "step": "build",
+          "side": "cand",
+          "exit": 0,
+          "duration_ms": 3042,
+          "timed_out": false,
+          "tail": "3.12.15\n"
+        },
+        {
+          "step": "build",
+          "side": "base",
+          "exit": 0,
+          "duration_ms": 3348,
+          "timed_out": false,
+          "tail": "3.12.15\n"
+        },
+        {
+          "step": "test",
+          "side": "base",
+          "exit": 0,
+          "duration_ms": 47400,
+          "timed_out": false,
+          "tail": ".....................                                                    [100%]\n---------------------- generated xml file: /out/junit.xml ----------------------\n21 passed in 45.25s\n"
+        },
+        {
+          "step": "test",
+          "side": "cand",
+          "exit": 0,
+          "duration_ms": 43894,
+          "timed_out": false,
+          "tail": ".....................                                                    [100%]\n---------------------- generated xml file: /out/junit.xml ----------------------\n21 passed in 42.31s\n"
+        },
+        {
+          "step": "equivalence",
+          "side": "base",
+          "exit": 0,
+          "duration_ms": 2943,
+          "timed_out": false,
+          "tail": " 48, 49, 54, 46, 10, 32, 71, 114, 267, 110, 98, 117, 114, 103, 44, 32, 90, 97, 99, 107, 32, 79, 39, 77, 97, 108, 108, 101, 121, 32, 40, 68, 101, 99, 101, 109, 98, 101, 114, 32, 50, 51, 44, 32, 50, 48, 49, 57, 41, 46, 32, 34, 70, 114, 111, 109, 32, 84, 97, 121, 108, 111, 114, 32, 83, 119, 105, 102, 116, 32, 84, 111, 32, 68, 114, 46, 32, 68, 114, 101, 58, 32, 84, 104, 101, 32, 49, 48, 32, 84, 111, 112, 45, 69, 97, 114, 110, 105, 110, 103, 32, 77, 117, 279, 99, 270, 110, 115, 32, 79, 102, 32, 84, 104, 101, 32, 68, 101, 99, 273, 101, 34, 46, 32, 70, 111, 114, 98, 101, 115, 46, 32, 65, 114, 99, 104, 105, 118, 101, 100, 32, 102, 114, 111, 109, 32, 116, 104, 101, 32, 111, 114, 105, 103, 105, 110, 97, 108, 32, 111, 110, 32, 68, 101, 99, 101, 109, 98, 101, 114, 32, 51, 48, 44, 32, 50, 48, 49, 57, 46, 32, 82, 101, 116, 114, 284, 118, 101, 100, 32, 68, 101, 99, 101, 109, 98, 101, 114, 32, 51, 49, 44, 32, 50, 48, 49, 57, 46, 10, 32, 83, 105, 108, 118, 97, 44, 32, 82, 97, 99, 104, 101, 108, 59, 32, 84, 111, 110, 101, 108, 108, 105, 44, 32, 76, 117, 99, 270, 32, 40, 79, 99, 116, 111, 98, 101, 114, 32, 51, 44, 32, 50, 48, 50, 51, 41, 46, 32, 34, 73, 110, 279, 100, 101, 32, 84, 97, 121, 108, 111]\n"
+        },
+        {
+          "step": "equivalence",
+          "side": "cand",
+          "exit": 0,
+          "duration_ms": 2966,
+          "timed_out": false,
+          "tail": " 48, 49, 54, 46, 10, 32, 71, 114, 267, 110, 98, 117, 114, 103, 44, 32, 90, 97, 99, 107, 32, 79, 39, 77, 97, 108, 108, 101, 121, 32, 40, 68, 101, 99, 101, 109, 98, 101, 114, 32, 50, 51, 44, 32, 50, 48, 49, 57, 41, 46, 32, 34, 70, 114, 111, 109, 32, 84, 97, 121, 108, 111, 114, 32, 83, 119, 105, 102, 116, 32, 84, 111, 32, 68, 114, 46, 32, 68, 114, 101, 58, 32, 84, 104, 101, 32, 49, 48, 32, 84, 111, 112, 45, 69, 97, 114, 110, 105, 110, 103, 32, 77, 117, 279, 99, 270, 110, 115, 32, 79, 102, 32, 84, 104, 101, 32, 68, 101, 99, 273, 101, 34, 46, 32, 70, 111, 114, 98, 101, 115, 46, 32, 65, 114, 99, 104, 105, 118, 101, 100, 32, 102, 114, 111, 109, 32, 116, 104, 101, 32, 111, 114, 105, 103, 105, 110, 97, 108, 32, 111, 110, 32, 68, 101, 99, 101, 109, 98, 101, 114, 32, 51, 48, 44, 32, 50, 48, 49, 57, 46, 32, 82, 101, 116, 114, 284, 118, 101, 100, 32, 68, 101, 99, 101, 109, 98, 101, 114, 32, 51, 49, 44, 32, 50, 48, 49, 57, 46, 10, 32, 83, 105, 108, 118, 97, 44, 32, 82, 97, 99, 104, 101, 108, 59, 32, 84, 111, 110, 101, 108, 108, 105, 44, 32, 76, 117, 99, 270, 32, 40, 79, 99, 116, 111, 98, 101, 114, 32, 51, 44, 32, 50, 48, 50, 51, 41, 46, 32, 34, 73, 110, 279, 100, 101, 32, 84, 97, 121, 108, 111]\n"
+        },
+        {
+          "step": "metrics",
+          "side": "base",
+          "exit": 0,
+          "duration_ms": 19477,
+          "timed_out": false,
+          "tail": "==7== Cachegrind, a cache and branch-prediction profiler\n==7== Copyright (C) 2002-2017, and GNU GPL'd, by Nicholas Nethercote et al.\n==7== Using Valgrind-3.19.0 and LibVEX; rerun with -h for copyright info\n==7== Command: python lineage_bench.py train ff73d7fb9e3bbd4e\n==7== \n==7== \n==7== I   refs:      2,253,170,140\n"
+        },
+        {
+          "step": "metrics",
+          "side": "cand",
+          "exit": 0,
+          "duration_ms": 17697,
+          "timed_out": false,
+          "tail": "==6== Cachegrind, a cache and branch-prediction profiler\n==6== Copyright (C) 2002-2017, and GNU GPL'd, by Nicholas Nethercote et al.\n==6== Using Valgrind-3.19.0 and LibVEX; rerun with -h for copyright info\n==6== Command: python lineage_bench.py train ff73d7fb9e3bbd4e\n==6== \n==6== \n==6== I   refs:      1,731,763,153\n"
+        },
+        {
+          "step": "metrics",
+          "side": "base",
+          "exit": 0,
+          "duration_ms": 17368,
+          "timed_out": false,
+          "tail": "==8== Cachegrind, a cache and branch-prediction profiler\n==8== Copyright (C) 2002-2017, and GNU GPL'd, by Nicholas Nethercote et al.\n==8== Using Valgrind-3.19.0 and LibVEX; rerun with -h for copyright info\n==8== Command: python lineage_bench.py encode ff73d7fb9e3bbd4e\n==8== \n==8== \n==8== I   refs:      1,848,214,041\n"
+        },
+        {
+          "step": "metrics",
+          "side": "cand",
+          "exit": 0,
+          "duration_ms": 12077,
+          "timed_out": false,
+          "tail": "==7== Cachegrind, a cache and branch-prediction profiler\n==7== Copyright (C) 2002-2017, and GNU GPL'd, by Nicholas Nethercote et al.\n==7== Using Valgrind-3.19.0 and LibVEX; rerun with -h for copyright info\n==7== Command: python lineage_bench.py encode ff73d7fb9e3bbd4e\n==7== \n==7== \n==7== I   refs:      1,022,183,239\n"
+        }
+      ]
+    },
+    {
+      "seq": 30,
+      "kind": "submit",
+      "at": 1791585075735,
+      "reason": "merge() now jumps between occurrences of pair[0] using list.count and list.index, which run in C, and copies the unchanged runs between them with slices. It still replaces non-overlapping matches left to right, including when both halves of the pair are the same token. Encoding goes through a shared encode_ids helper. It ranks the pairs in one C map of merges.get with an inf default, then takes min and the first index of that minimum. That picks the same pair as the old min over the first-seen stats dict, with ties included, and it no longer builds the dict or calls a lambda for every pair. In RegexTokenizer.train, chunks with fewer than 2 tokens are dropped because they have no pairs and never grow. Chunks with weight 1 are counted with _count_elements, which keeps the same counts in the same insertion order. Chunks without pair[0] skip merge. Evaluate: outputs identical; train_ir ratio 0.769, encode_ir ratio 0.553."
+    }
+  ],
+  "candidate": {
+    "commit_id": "e59d18f13b076abe2d36bd035d593ecc357c1641d8fd79de5b550e385c2f8db1",
+    "candidate_id": "c62b503f1024e7b5b1c1f3a1b56ec2e3b0dafb10bebfa27e91e70584a0c531a6",
+    "kind": "perf",
+    "target": "train_ir",
+    "claimed_effect": 0.7685896072633024,
+    "patch": "diff --git a/minbpe/base.py b/minbpe/base.py\n--- a/minbpe/base.py\n+++ b/minbpe/base.py\n@@ -6,6 +6,7 @@ e.g. isolating all regex/pattern parts to the RegexTokenizer, but\n some concessions are made for simplicity.\n \"\"\"\n import unicodedata\n+from itertools import repeat\n \n try:\n     from _collections import _count_elements\n@@ -37,18 +38,52 @@ def merge(ids, pair, idx):\n     of pair with the new integer token idx\n     Example: ids=[1, 2, 3, 1, 2], pair=(1, 2), idx=4 -> [4, 3, 4]\n     \"\"\"\n+    p0, p1 = pair\n+    # jump between occurrences of p0 with list.index (a C scan) and copy the\n+    # untouched runs in between with slices; scanning left to right and\n+    # skipping past each replaced pair gives the same non-overlapping result\n+    remaining = ids.count(p0)\n+    if not remaining:\n+        return list(ids)\n     newids = []\n-    i = 0\n-    while i < len(ids):\n-        # if not at the very last position AND the pair matches, replace it\n-        if ids[i] == pair[0] and i < len(ids) - 1 and ids[i+1] == pair[1]:\n+    index = ids.index\n+    last = len(ids) - 1\n+    start = i = 0\n+    while remaining:\n+        j = index(p0, i)\n+        if j == last:\n+            break\n+        if ids[j+1] == p1:\n+            newids.extend(ids[start:j])\n             newids.append(idx)\n-            i += 2\n+            start = i = j + 2\n+            # with p0 == p1 the skipped element was an occurrence of p0 too\n+            remaining -= 2 if p0 == p1 else 1\n         else:\n-            newids.append(ids[i])\n-            i += 1\n+            i = j + 1\n+            remaining -= 1\n+    newids.extend(ids[start:])\n     return newids\n \n+\n+def encode_ids(ids, merges):\n+    \"\"\"\n+    Repeatedly merge the pair with the lowest merge index in ids, until no\n+    consecutive pair of ids is in merges. Returns the resulting list.\n+    \"\"\"\n+    get = merges.get\n+    inf = float(\"inf\")\n+    while len(ids) >= 2:\n+        # rank of every consecutive pair, in order; the first minimum is the\n+        # pair that min() over the first-seen pair counts would pick\n+        ranks = list(map(get, zip(ids, ids[1:]), repeat(inf)))\n+        rank = min(ranks)\n+        if rank == inf:\n+            break # nothing else can be merged anymore\n+        j = ranks.index(rank)\n+        ids = merge(ids, (ids[j], ids[j+1]), rank)\n+    return ids\n+\n # first two helper functions...\n def replace_control_characters(s: str) -> str:\n     # we don't want to print control characters\ndiff --git a/minbpe/basic.py b/minbpe/basic.py\n--- a/minbpe/basic.py\n+++ b/minbpe/basic.py\n@@ -9,7 +9,7 @@ But:\n - Does not handle any special tokens.\n \"\"\"\n \n-from .base import Tokenizer, get_stats, merge\n+from .base import Tokenizer, get_stats, merge, encode_ids\n \n \n class BasicTokenizer(Tokenizer):\n@@ -58,17 +58,5 @@ class BasicTokenizer(Tokenizer):\n         # given a string text, return the token ids\n         text_bytes = text.encode(\"utf-8\") # raw bytes\n         ids = list(text_bytes) # list of integers in range 0..255\n-        while len(ids) >= 2:\n-            # find the pair with the lowest merge index\n-            stats = get_stats(ids)\n-            pair = min(stats, key=lambda p: self.merges.get(p, float(\"inf\")))\n-            # subtle: if there are no more merges available, the key will\n-            # result in an inf for every single pair, and the min will be\n-            # just the first pair in the list, arbitrarily\n-            # we can detect this terminating case by a membership check\n-            if pair not in self.merges:\n-                break # nothing else can be merged anymore\n-            # otherwise let's merge the best pair (lowest merge index)\n-            idx = self.merges[pair]\n-            ids = merge(ids, pair, idx)\n-        return ids\n+        # repeatedly merge the pair with the lowest merge index\n+        return encode_ids(ids, self.merges)\ndiff --git a/minbpe/regex.py b/minbpe/regex.py\n--- a/minbpe/regex.py\n+++ b/minbpe/regex.py\n@@ -10,7 +10,7 @@ Unlike BasicTokenizer:\n \"\"\"\n \n import regex as re\n-from .base import Tokenizer, get_stats, merge\n+from .base import Tokenizer, get_stats, merge, encode_ids, _count_elements\n \n \n # the main GPT text split patterns, see\n@@ -55,16 +55,30 @@ class RegexTokenizer(Tokenizer):\n         vocab = {idx: bytes([idx]) for idx in range(256)} # idx -> bytes\n         for i in range(num_merges):\n             # count the number of times every consecutive pair appears\n+            # (chunks of a single token have no pairs and never get longer, so\n+            # they are dropped; this leaves the counts and their order unchanged)\n+            if any(len(chunk_ids) < 2 for chunk_ids in ids):\n+                kept = [k for k, chunk_ids in enumerate(ids) if len(chunk_ids) >= 2]\n+                ids = [ids[k] for k in kept]\n+                weights = [weights[k] for k in kept]\n             stats = {}\n+            stats_get = stats.get\n             for chunk_ids, w in zip(ids, weights):\n-                for p in zip(chunk_ids, chunk_ids[1:]):\n-                    stats[p] = stats.get(p, 0) + w\n+                if w == 1:\n+                    # same as the loop below with w == 1, done in C\n+                    _count_elements(stats, zip(chunk_ids, chunk_ids[1:]))\n+                else:\n+                    for p in zip(chunk_ids, chunk_ids[1:]):\n+                        stats[p] = stats_get(p, 0) + w\n             # find the pair with the highest count\n-            pair = max(stats, key=stats.get)\n+            pair = max(stats, key=stats_get)\n             # mint a new token: assign it the next available id\n             idx = 256 + i\n             # replace all occurrences of pair in ids with idx\n-            ids = [merge(chunk_ids, pair, idx) for chunk_ids in ids]\n+            # (chunks without pair[0] are left as they are)\n+            p0 = pair[0]\n+            ids = [merge(chunk_ids, pair, idx) if p0 in chunk_ids else chunk_ids\n+                   for chunk_ids in ids]\n             # save the merge\n             merges[pair] = idx\n             vocab[idx] = vocab[pair[0]] + vocab[pair[1]]\n@@ -99,21 +113,8 @@ class RegexTokenizer(Tokenizer):\n     def _encode_chunk(self, text_bytes):\n         # return the token ids\n         # let's begin. first, convert all bytes to integers in range 0..255\n-        ids = list(text_bytes)\n-        while len(ids) >= 2:\n-            # find the pair with the lowest merge index\n-            stats = get_stats(ids)\n-            pair = min(stats, key=lambda p: self.merges.get(p, float(\"inf\")))\n-            # subtle: if there are no more merges available, the key will\n-            # result in an inf for every single pair, and the min will be\n-            # just the first pair in the list, arbitrarily\n-            # we can detect this terminating case by a membership check\n-            if pair not in self.merges:\n-                break # nothing else can be merged anymore\n-            # otherwise let's merge the best pair (lowest merge index)\n-            idx = self.merges[pair]\n-            ids = merge(ids, pair, idx)\n-        return ids\n+        # then repeatedly merge the pair with the lowest merge index\n+        return encode_ids(list(text_bytes), self.merges)\n \n     def encode_ordinary(self, text):\n         \"\"\"Encoding that ignores any special tokens.\"\"\"\n",
+    "patch_hash": "66501031f460c986b3ac7b85d6c19417c8c8b81fbbf4c3cec7dfe9c63f03e68c",
+    "semantic_hash": "6446061a086f063faae5f06877cc355dbd78851d0a7a4da8932e63d8bdbb02e9",
+    "status": "rejected",
+    "reason": "stale_conflict",
+    "committed_at": 1791585075747,
+    "revealed_at": 1791585075753,
+    "finalized_at": 1791585333235,
+    "gen_id": null
+  },
+  "replays": [
+    {
+      "replay_id": "3bfafcfb701090d9c491cfbf10ea6849711c22b1c30ea2698e7286d128df807f",
+      "kind": "replay",
+      "role": "counted",
+      "status": "revealed",
+      "replayer": "3jJHAgibtbRtbTw9T2TMadYppiFV2YzGptWMrCsgu6Xz",
+      "counted": false,
+      "apply": "ok",
+      "build": {
+        "base": "ok",
+        "cand": "ok"
+      },
+      "tests": {
+        "base_pass": 21,
+        "cand_pass": 21,
+        "cand_fail": 0
+      },
+      "equivalence_same": true,
+      "metrics": {
+        "encode_ir": {
+          "base": [
+            1548823185
+          ],
+          "cand": [
+            928449434
+          ],
+          "ratio": 0.5994547621651208
+        },
+        "train_ir": {
+          "base": [
+            2373128468
+          ],
+          "cand": [
+            1809384452
+          ],
+          "ratio": 0.762446903485547
+        }
+      },
+      "env": {
+        "cores": 2,
+        "cpu_model": "DO-Regular",
+        "image_digest": "sha256:beb7b0264451a2bdc993fe5deee1e8b6275fbad7d83d593c69f7a40c64f1164d",
+        "worker_version": "lineage-sandbox/0.1.0"
+      }
+    },
+    {
+      "replay_id": "d355d120cb623fb2a8bd4f96e34736300ec02e47ffbf2f2b2dc39a6ba8b06e4b",
+      "kind": "replay",
+      "role": "counted",
+      "status": "revealed",
+      "replayer": "7ToydZerFjuoguBEBkdnJgFfjED2paWonAecHSVA1kjK",
+      "counted": false,
+      "apply": "ok",
+      "build": {
+        "base": "ok",
+        "cand": "ok"
+      },
+      "tests": {
+        "base_pass": 21,
+        "cand_pass": 21,
+        "cand_fail": 0
+      },
+      "equivalence_same": true,
+      "metrics": {
+        "encode_ir": {
+          "base": [
+            1548823185
+          ],
+          "cand": [
+            928449440
+          ],
+          "ratio": 0.5994547660390298
+        },
+        "train_ir": {
+          "base": [
+            2373128468
+          ],
+          "cand": [
+            1809384458
+          ],
+          "ratio": 0.7624469060138551
+        }
+      },
+      "env": {
+        "cores": 2,
+        "cpu_model": "DO-Regular",
+        "image_digest": "sha256:beb7b0264451a2bdc993fe5deee1e8b6275fbad7d83d593c69f7a40c64f1164d",
+        "worker_version": "lineage-sandbox/0.1.0"
+      }
+    },
+    {
+      "replay_id": "75f678f9cd8310aa1c0c34336bbf7fde76dbb72939561f3521980b66f1a6706b",
+      "kind": "replay",
+      "role": "counted",
+      "status": "revealed",
+      "replayer": "3jJHAgibtbRtbTw9T2TMadYppiFV2YzGptWMrCsgu6Xz",
+      "counted": true,
+      "apply": "conflict",
+      "build": {
+        "base": "ok",
+        "cand": "skipped"
+      },
+      "tests": {
+        "base_pass": 21,
+        "cand_pass": 0,
+        "cand_fail": 0
+      },
+      "equivalence_same": null,
+      "metrics": {},
+      "env": {
+        "cores": 2,
+        "cpu_model": "DO-Regular",
+        "image_digest": "sha256:beb7b0264451a2bdc993fe5deee1e8b6275fbad7d83d593c69f7a40c64f1164d",
+        "worker_version": "lineage-sandbox/0.1.0"
+      }
+    },
+    {
+      "replay_id": "c3d43c323d5e7d90960dfb9a60e581f781ca18bcd52bc1d3b03ff8ae16f79a90",
+      "kind": "replay",
+      "role": "counted",
+      "status": "revealed",
+      "replayer": "7ToydZerFjuoguBEBkdnJgFfjED2paWonAecHSVA1kjK",
+      "counted": true,
+      "apply": "conflict",
+      "build": {
+        "base": "ok",
+        "cand": "skipped"
+      },
+      "tests": {
+        "base_pass": 21,
+        "cand_pass": 0,
+        "cand_fail": 0
+      },
+      "equivalence_same": null,
+      "metrics": {},
+      "env": {
+        "cores": 2,
+        "cpu_model": "DO-Regular",
+        "image_digest": "sha256:beb7b0264451a2bdc993fe5deee1e8b6275fbad7d83d593c69f7a40c64f1164d",
+        "worker_version": "lineage-sandbox/0.1.0"
+      }
+    }
+  ],
+  "verdict": {
+    "outcome": "rejected",
+    "reason": "apply_conflict",
+    "detail": "patch does not apply to parent",
+    "effect": null,
+    "digest": "2dd47289daa417efe76741fad57e29d2e6a12b4d7aca0c3a2db4be425a297afe"
+  },
+  "outcome": "rejected",
+  "effect": null,
+  "cost": {
+    "input_tokens": 18,
+    "output_tokens": 8642,
+    "cache_read_tokens": 97951,
+    "cache_write_tokens": 18903,
+    "usd": 0.287017,
+    "sandbox_s": 171,
+    "source": "provenance:hosted"
+  },
+  "reward": {
+    "v": 1,
+    "accepted": 0,
+    "effect": 0,
+    "fixed_tests": 0,
+    "effect_per_usd": 0,
+    "effect_per_sandbox_hour": 0,
+    "reverted": false,
+    "inputs": [
+      "outcome",
+      "cost.usd (provenance:hosted)",
+      "cost.sandbox_s (provenance:hosted)"
+    ]
+  },
+  "worker_outcome": null,
+  "journal": null,
+  "provenance": {
+    "runtime": "hosted",
+    "digest": "099f98d46a8bc4398b5da959bd62c4f5821b49e9c5c7fdb84728a937bd4f6e1c",
+    "sig": "2VtoT1Lp76Sx3dKxpmkZzRYHhPWag48oFTQNz5G5ZjmptcwnELMEgekqePei5te2kx2D7dD2tESg9v6zKkeA3rsC",
+    "signer": "DCmdy5MoAfnN6fn3nVW27db62ZwtjoksqSqdjAc8VPk4"
+  },
+  "license": {
+    "repo": "https://github.com/karpathy/minbpe",
+    "spdx": "MIT",
+    "name": "MIT License",
+    "url": "https://github.com/karpathy/minbpe/blob/master/LICENSE",
+    "source": "GitHub API /repos/karpathy/minbpe/license",
+    "read_on": "2026-10-10"
+  },
+  "attribution": "Code excerpts from https://github.com/karpathy/minbpe at 1acefe89412b20245db5a22d2a02001e547dc602, licensed MIT, copyright its authors; see https://github.com/karpathy/minbpe/blob/master/LICENSE.",
+  "times": {
+    "started_at": 1791584828907,
+    "ended_at": 1791585075785,
+    "finalized_at": 1791585333235,
+    "published_at": 1791669219426
+  },
+  "verify": {
+    "session": "/v1/sessions/a68ae4a17decb3f6f57111fab5f6be4bd4733e62be0d0e7bb4a005dd3f96caf9",
+    "candidate": "/v1/candidates/e59d18f13b076abe2d36bd035d593ecc357c1641d8fd79de5b550e385c2f8db1",
+    "generation": null,
+    "provenance": "/v1/candidates/e59d18f13b076abe2d36bd035d593ecc357c1641d8fd79de5b550e385c2f8db1/provenance",
+    "journal": null
+  }
+}

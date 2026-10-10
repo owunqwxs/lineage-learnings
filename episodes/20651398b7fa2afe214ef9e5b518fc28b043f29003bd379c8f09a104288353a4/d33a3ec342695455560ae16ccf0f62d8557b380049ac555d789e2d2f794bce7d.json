@@ -1,0 +1,528 @@
+{
+  "schema": "lineage-episode/1",
+  "episode_id": "d33a3ec342695455560ae16ccf0f62d8557b380049ac555d789e2d2f794bce7d",
+  "seq": 2629,
+  "network": "devnet",
+  "session_id": "080cc5928899e001626b4bfa299ea106282c9ad23c20320a95485ead984bfbde",
+  "agent": {
+    "id": "6C8N2z5LwktukWEP6g8sUnf9ky1L9rxyngBLbdomUzHc",
+    "name": null,
+    "hidden": false,
+    "hosted": true,
+    "identity_mode": "purchased",
+    "soul": null
+  },
+  "model": {
+    "provider": "anthropic",
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "route": null,
+    "harness": {
+      "name": "anthropic",
+      "version": "anthropic/1",
+      "digest": "addd1f19b8193784674f2c52ca9e30a81e1c83fca6238003deb565cfb56946b1"
+    },
+    "source": "provenance:hosted",
+    "provider_note": "older record without a provider field; the anthropic harness calls only Anthropic's API"
+  },
+  "task": {
+    "recipe": {
+      "recipe_id": "46a0d78dd189aa96c32d8f87402f2288b375c0934af32d036350034feb51f648",
+      "name": "minbpe",
+      "class": "python",
+      "repo": "https://github.com/karpathy/minbpe",
+      "commit": "1acefe89412b20245db5a22d2a02001e547dc602"
+    },
+    "lineage_id": "20651398b7fa2afe214ef9e5b518fc28b043f29003bd379c8f09a104288353a4",
+    "parent_gen_id": "fc39f3e91027fa85ce35f19ced278ca78121889978d50f3c55db3bdb12477a69",
+    "parent_height": 9,
+    "metrics": [
+      {
+        "name": "train_ir",
+        "kind": "perf",
+        "direction": "lower",
+        "deterministic": true,
+        "min_effect": 0.01
+      },
+      {
+        "name": "encode_ir",
+        "kind": "perf",
+        "direction": "lower",
+        "deterministic": true,
+        "min_effect": 0.01
+      }
+    ],
+    "target": {
+      "kind": "perf",
+      "target": "train_ir",
+      "source": "candidate"
+    },
+    "baseline": null
+  },
+  "plan": {
+    "planned": null,
+    "opening_note": null,
+    "source": "session notes"
+  },
+  "hypotheses": [],
+  "actions": [
+    {
+      "seq": 1,
+      "kind": "list",
+      "path": "minbpe",
+      "count": 5,
+      "at": 1791589179316
+    },
+    {
+      "seq": 2,
+      "kind": "read",
+      "path": "lineage_bench.py",
+      "start_line": 1,
+      "end_line": 107,
+      "content_sha256": "0e575e458ce50ddadd5137d4ad35bdf3dde443e46e4c7a6be1d8011a16d274ca",
+      "at": 1791589179316
+    },
+    {
+      "seq": 3,
+      "kind": "read",
+      "path": "minbpe/base.py",
+      "start_line": 1,
+      "end_line": 270,
+      "content_sha256": "866462e9499d692c1713f83978bb3270369167c3d893bcdd024f7e37e1e218c9",
+      "at": 1791589181810
+    },
+    {
+      "seq": 4,
+      "kind": "read",
+      "path": "minbpe/regex.py",
+      "start_line": 1,
+      "end_line": 210,
+      "content_sha256": "90b1bafdd38fcc809468d8dd08235800df6ec4aa320fb2d1737d858813bf8221",
+      "at": 1791589181814
+    },
+    {
+      "seq": 5,
+      "kind": "read",
+      "path": "minbpe/basic.py",
+      "start_line": 1,
+      "end_line": 118,
+      "content_sha256": "7e2e1f873d22c39c1305c9bf6ec5465ef6a021e5eaf55dfa58c6f034c642bed2",
+      "at": 1791589181814
+    },
+    {
+      "seq": 6,
+      "kind": "edit",
+      "path": "minbpe/regex.py",
+      "start_line": 79,
+      "end_line": 82,
+      "lines_before": 4,
+      "lines_after": 8,
+      "at": 1791589232469,
+      "diff": "--- a/minbpe/regex.py\n+++ b/minbpe/regex.py\n@@ -79,4 +79,8 @@\n-            pair = max(stats, key=stats_get)\n-            top = stats[pair]\n-            if list(stats_values).count(top) > 1:\n-                cands = set(compress(stats, map(top.__eq__, stats_values)))\n+            # (max over the plain count values, then the first key holding it:\n+            # the same pair max(stats, key=stats.get) returns, without hashing\n+            # and looking up every pair again)\n+            vals = list(stats_values)\n+            top = max(vals)\n+            pair = next(islice(stats, vals.index(top), None))\n+            if vals.count(top) > 1:\n+                cands = set(compress(stats, map(top.__eq__, vals)))"
+    },
+    {
+      "seq": 7,
+      "kind": "edit",
+      "path": "minbpe/regex.py",
+      "start_line": 12,
+      "end_line": 12,
+      "lines_before": 1,
+      "lines_after": 1,
+      "at": 1791589232473,
+      "diff": "--- a/minbpe/regex.py\n+++ b/minbpe/regex.py\n@@ -12,1 +12,1 @@\n-from itertools import compress\n+from itertools import compress, islice"
+    },
+    {
+      "seq": 8,
+      "kind": "edit",
+      "path": "minbpe/basic.py",
+      "start_line": 81,
+      "end_line": 84,
+      "lines_before": 4,
+      "lines_after": 8,
+      "at": 1791589232473,
+      "diff": "--- a/minbpe/basic.py\n+++ b/minbpe/basic.py\n@@ -81,4 +81,8 @@\n-            pair = max(stats, key=stats_get)\n-            top = stats[pair]\n-            if list(stats_values).count(top) > 1:\n-                cands = {p for p, c in stats.items() if c == top}\n+            # (max over the plain count values, then the first key holding it:\n+            # the same pair max(stats, key=stats.get) returns, without hashing\n+            # and looking up every pair again)\n+            vals = list(stats_values)\n+            top = max(vals)\n+            pair = next(islice(stats, vals.index(top), None))\n+            if vals.count(top) > 1:\n+                cands = set(compress(stats, map(top.__eq__, vals)))"
+    },
+    {
+      "seq": 9,
+      "kind": "edit",
+      "path": "minbpe/basic.py",
+      "start_line": 12,
+      "end_line": 12,
+      "lines_before": 1,
+      "lines_after": 3,
+      "at": 1791589232473,
+      "diff": "--- a/minbpe/basic.py\n+++ b/minbpe/basic.py\n@@ -12,1 +12,3 @@\n-from .base import Tokenizer, get_stats, merge, apply_merges\n+from itertools import compress, islice\n+\n+from .base import Tokenizer, get_stats, merge, apply_merges"
+    },
+    {
+      "seq": 10,
+      "kind": "evaluate",
+      "target": "train_ir",
+      "eval_kind": "perf",
+      "at": 1791589238031,
+      "phases": [
+        {
+          "phase": "prepare",
+          "at": 1791589238031
+        },
+        {
+          "phase": "build",
+          "at": 1791589238569
+        },
+        {
+          "phase": "build",
+          "at": 1791589238573
+        },
+        {
+          "phase": "test",
+          "at": 1791589240557
+        },
+        {
+          "phase": "test",
+          "at": 1791589287482
+        },
+        {
+          "phase": "equivalence",
+          "at": 1791589336908
+        },
+        {
+          "phase": "equivalence",
+          "at": 1791589336910
+        },
+        {
+          "phase": "metrics",
+          "at": 1791589338939
+        },
+        {
+          "phase": "metrics",
+          "at": 1791589351276
+        },
+        {
+          "phase": "metrics",
+          "at": 1791589364065
+        },
+        {
+          "phase": "metrics",
+          "at": 1791589376926
+        }
+      ]
+    },
+    {
+      "seq": 22,
+      "kind": "result",
+      "at": 1791589390054,
+      "output": "outcome: accepted\nguard: ok, 2 files, 28 lines\nbuild: base ok, candidate ok\nequivalence: identical outputs\nmetric train_ir: parent 832497799, candidate 774632822, ratio 0.9305\nmetric encode_ir: parent 678132337, candidate 678760043, ratio 1.0009",
+      "outcome": "accepted",
+      "steps": [
+        {
+          "step": "build",
+          "side": "cand",
+          "exit": 0,
+          "duration_ms": 1848,
+          "timed_out": false,
+          "tail": "3.12.15\n"
+        },
+        {
+          "step": "build",
+          "side": "base",
+          "exit": 0,
+          "duration_ms": 1968,
+          "timed_out": false,
+          "tail": "3.12.15\n"
+        },
+        {
+          "step": "test",
+          "side": "base",
+          "exit": 0,
+          "duration_ms": 46898,
+          "timed_out": false,
+          "tail": ".....................                                                    [100%]\n---------------------- generated xml file: /out/junit.xml ----------------------\n21 passed in 44.79s\n"
+        },
+        {
+          "step": "test",
+          "side": "cand",
+          "exit": 0,
+          "duration_ms": 49414,
+          "timed_out": false,
+          "tail": ".....................                                                    [100%]\n---------------------- generated xml file: /out/junit.xml ----------------------\n21 passed in 47.31s\n"
+        },
+        {
+          "step": "equivalence",
+          "side": "base",
+          "exit": 0,
+          "duration_ms": 1873,
+          "timed_out": false,
+          "tail": "4, 105, 108, 32, 49, 56, 44, 32, 50, 48, 49, 50, 46, 10, 32, 67, 111, 108, 108, 105, 110, 115, 44, 32, 75, 97, 116, 105, 101, 32, 40, 74, 117, 110, 101, 32, 56, 44, 32, 50, 48, 49, 56, 41, 46, 32, 34, 72, 111, 119, 32, 84, 97, 121, 108, 111, 114, 32, 83, 119, 105, 102, 116, 32, 102, 108, 105, 112, 112, 101, 100, 32, 111, 110, 108, 105, 110, 101, 32, 102, 97, 110, 100, 111, 109, 32, 111, 110, 32, 105, 116, 115, 32, 104, 272, 100, 32, 102, 111, 114, 32, 116, 104, 101, 32, 280, 116, 116, 101, 114, 34, 46, 32, 67, 78, 69, 84, 46, 32, 82, 101, 116, 114, 105, 101, 118, 101, 100, 32, 77, 97, 114, 99, 104, 32, 49, 57, 44, 32, 50, 48, 50, 51, 46, 10, 32, 75, 105, 110, 103, 44, 32, 65, 115, 104, 108, 101, 121, 32, 40, 74, 117, 108, 121, 32, 50, 49, 44, 32, 50, 48, 50, 51, 41, 46, 32, 34, 84, 97, 121, 108, 111, 114, 32, 83, 119, 105, 102, 116, 39, 115, 32, 49, 51, 32, 77, 97, 110, 97, 103, 101, 109, 101, 110, 116, 32, 105, 115, 32, 82, 97, 114, 101, 108, 121, 32, 68, 105, 115, 99, 117, 115, 115, 101, 100, 44, 32, 67, 104, 97, 110, 103, 101, 115, 32, 65, 98, 279, 110, 100, 34, 46, 32, 68, 105, 103, 105, 116, 97, 108, 32, 77, 117, 115, 105, 99, 32, 78, 101, 119, 115, 46, 32, 82, 101, 116, 114]\n"
+        },
+        {
+          "step": "equivalence",
+          "side": "cand",
+          "exit": 0,
+          "duration_ms": 2005,
+          "timed_out": false,
+          "tail": "4, 105, 108, 32, 49, 56, 44, 32, 50, 48, 49, 50, 46, 10, 32, 67, 111, 108, 108, 105, 110, 115, 44, 32, 75, 97, 116, 105, 101, 32, 40, 74, 117, 110, 101, 32, 56, 44, 32, 50, 48, 49, 56, 41, 46, 32, 34, 72, 111, 119, 32, 84, 97, 121, 108, 111, 114, 32, 83, 119, 105, 102, 116, 32, 102, 108, 105, 112, 112, 101, 100, 32, 111, 110, 108, 105, 110, 101, 32, 102, 97, 110, 100, 111, 109, 32, 111, 110, 32, 105, 116, 115, 32, 104, 272, 100, 32, 102, 111, 114, 32, 116, 104, 101, 32, 280, 116, 116, 101, 114, 34, 46, 32, 67, 78, 69, 84, 46, 32, 82, 101, 116, 114, 105, 101, 118, 101, 100, 32, 77, 97, 114, 99, 104, 32, 49, 57, 44, 32, 50, 48, 50, 51, 46, 10, 32, 75, 105, 110, 103, 44, 32, 65, 115, 104, 108, 101, 121, 32, 40, 74, 117, 108, 121, 32, 50, 49, 44, 32, 50, 48, 50, 51, 41, 46, 32, 34, 84, 97, 121, 108, 111, 114, 32, 83, 119, 105, 102, 116, 39, 115, 32, 49, 51, 32, 77, 97, 110, 97, 103, 101, 109, 101, 110, 116, 32, 105, 115, 32, 82, 97, 114, 101, 108, 121, 32, 68, 105, 115, 99, 117, 115, 115, 101, 100, 44, 32, 67, 104, 97, 110, 103, 101, 115, 32, 65, 98, 279, 110, 100, 34, 46, 32, 68, 105, 103, 105, 116, 97, 108, 32, 77, 117, 115, 105, 99, 32, 78, 101, 119, 115, 46, 32, 82, 101, 116, 114]\n"
+        },
+        {
+          "step": "metrics",
+          "side": "base",
+          "exit": 0,
+          "duration_ms": 12336,
+          "timed_out": false,
+          "tail": "==7== Cachegrind, a cache and branch-prediction profiler\n==7== Copyright (C) 2002-2017, and GNU GPL'd, by Nicholas Nethercote et al.\n==7== Using Valgrind-3.19.0 and LibVEX; rerun with -h for copyright info\n==7== Command: python lineage_bench.py train e53af59231abcdb7\n==7== \n==7== \n==7== I   refs:      832,497,799\n"
+        },
+        {
+          "step": "metrics",
+          "side": "cand",
+          "exit": 0,
+          "duration_ms": 12787,
+          "timed_out": false,
+          "tail": "==7== Cachegrind, a cache and branch-prediction profiler\n==7== Copyright (C) 2002-2017, and GNU GPL'd, by Nicholas Nethercote et al.\n==7== Using Valgrind-3.19.0 and LibVEX; rerun with -h for copyright info\n==7== Command: python lineage_bench.py train e53af59231abcdb7\n==7== \n==7== \n==7== I   refs:      774,632,822\n"
+        },
+        {
+          "step": "metrics",
+          "side": "base",
+          "exit": 0,
+          "duration_ms": 12860,
+          "timed_out": false,
+          "tail": "==6== Cachegrind, a cache and branch-prediction profiler\n==6== Copyright (C) 2002-2017, and GNU GPL'd, by Nicholas Nethercote et al.\n==6== Using Valgrind-3.19.0 and LibVEX; rerun with -h for copyright info\n==6== Command: python lineage_bench.py encode e53af59231abcdb7\n==6== \n==6== \n==6== I   refs:      678,132,337\n"
+        },
+        {
+          "step": "metrics",
+          "side": "cand",
+          "exit": 0,
+          "duration_ms": 13102,
+          "timed_out": false,
+          "tail": "==6== Cachegrind, a cache and branch-prediction profiler\n==6== Copyright (C) 2002-2017, and GNU GPL'd, by Nicholas Nethercote et al.\n==6== Using Valgrind-3.19.0 and LibVEX; rerun with -h for copyright info\n==6== Command: python lineage_bench.py encode e53af59231abcdb7\n==6== \n==6== \n==6== I   refs:      678,760,043\n"
+        }
+      ]
+    },
+    {
+      "seq": 23,
+      "kind": "submit",
+      "at": 1791589394320,
+      "reason": "In both BasicTokenizer.train and RegexTokenizer.train, the per-merge selection max(stats, key=stats.get) hashed and looked up every pair tuple again. It is replaced by: snapshot the values list (already built for the tie check), max over the plain ints, then find the first key holding that max via vals.index + islice over the dict. That is exactly the key max() returned (first maximum in dict iteration order), and the tie-break logic is unchanged and reuses the same values list. Equivalence harness identical; train_ir 0.9305."
+    }
+  ],
+  "candidate": {
+    "commit_id": "994bd32ffd5767bdeaaa682455719ca6dc0e10a2b7e45f3e92c3b7adce467b3b",
+    "candidate_id": "1ebb3a5b1bacb7d72a842fcba8f860977197cd9bf2b94f0a708b9f6d2e3c7a9e",
+    "kind": "perf",
+    "target": "train_ir",
+    "claimed_effect": 0.9304923363527114,
+    "patch": "diff --git a/minbpe/basic.py b/minbpe/basic.py\n--- a/minbpe/basic.py\n+++ b/minbpe/basic.py\n@@ -9,6 +9,8 @@ But:\n - Does not handle any special tokens.\n \"\"\"\n \n+from itertools import compress, islice\n+\n from .base import Tokenizer, get_stats, merge, apply_merges\n \n \n@@ -78,10 +80,14 @@ class BasicTokenizer(Tokenizer):\n             # find the pair with the highest count; ties go to the pair whose\n             # first occurrence in ids is earliest, which is what max() over a\n             # freshly recounted dict (insertion = first-seen order) would pick\n-            pair = max(stats, key=stats_get)\n-            top = stats[pair]\n-            if list(stats_values).count(top) > 1:\n-                cands = {p for p, c in stats.items() if c == top}\n+            # (max over the plain count values, then the first key holding it:\n+            # the same pair max(stats, key=stats.get) returns, without hashing\n+            # and looking up every pair again)\n+            vals = list(stats_values)\n+            top = max(vals)\n+            pair = next(islice(stats, vals.index(top), None))\n+            if vals.count(top) > 1:\n+                cands = set(compress(stats, map(top.__eq__, vals)))\n                 for p in zip(ids, ids[1:]):\n                     if p in cands:\n                         pair = p\ndiff --git a/minbpe/regex.py b/minbpe/regex.py\n--- a/minbpe/regex.py\n+++ b/minbpe/regex.py\n@@ -9,7 +9,7 @@ Unlike BasicTokenizer:\n - RegexTokenizer handles optional special tokens.\n \"\"\"\n \n-from itertools import compress\n+from itertools import compress, islice\n \n import regex as re\n from .base import Tokenizer, merge, apply_merges, _count_elements\n@@ -76,10 +76,14 @@ class RegexTokenizer(Tokenizer):\n             # find the pair with the highest count; ties go to the pair whose\n             # first occurrence (chunk order, then position) is earliest, which\n             # is what max() over a freshly recounted dict would pick\n-            pair = max(stats, key=stats_get)\n-            top = stats[pair]\n-            if list(stats_values).count(top) > 1:\n-                cands = set(compress(stats, map(top.__eq__, stats_values)))\n+            # (max over the plain count values, then the first key holding it:\n+            # the same pair max(stats, key=stats.get) returns, without hashing\n+            # and looking up every pair again)\n+            vals = list(stats_values)\n+            top = max(vals)\n+            pair = next(islice(stats, vals.index(top), None))\n+            if vals.count(top) > 1:\n+                cands = set(compress(stats, map(top.__eq__, vals)))\n                 for chunk_ids in ids:\n                     if not cands.isdisjoint(zip(chunk_ids, chunk_ids[1:])):\n                         for p in zip(chunk_ids, chunk_ids[1:]):\n",
+    "patch_hash": "7dd16b78d6c100db32a8f05948564da6830cc27cc1ef7041c9d266c45df8b26c",
+    "semantic_hash": "c007e47053bd57f193a76a6b1f684a65ddb89c5cb7be0cc20b5712ab1cc4f014",
+    "status": "rejected",
+    "reason": "stale_conflict",
+    "committed_at": 1791589394337,
+    "revealed_at": 1791589394348,
+    "finalized_at": 1791589701554,
+    "gen_id": null
+  },
+  "replays": [
+    {
+      "replay_id": "46e3be5a42b2aa43caa2691577ff3b37a4924b0d01d9b27c02ad4bb527fc92b8",
+      "kind": "replay",
+      "role": "counted",
+      "status": "revealed",
+      "replayer": "7ToydZerFjuoguBEBkdnJgFfjED2paWonAecHSVA1kjK",
+      "counted": false,
+      "apply": "ok",
+      "build": {
+        "base": "ok",
+        "cand": "ok"
+      },
+      "tests": {
+        "base_pass": 21,
+        "cand_pass": 21,
+        "cand_fail": 0
+      },
+      "equivalence_same": true,
+      "metrics": {
+        "encode_ir": {
+          "base": [
+            632275980
+          ],
+          "cand": [
+            632636413
+          ],
+          "ratio": 1.0005700564490843
+        },
+        "train_ir": {
+          "base": [
+            795046440
+          ],
+          "cand": [
+            745483172
+          ],
+          "ratio": 0.9376599082690062
+        }
+      },
+      "env": {
+        "cores": 2,
+        "cpu_model": "DO-Regular",
+        "image_digest": "sha256:beb7b0264451a2bdc993fe5deee1e8b6275fbad7d83d593c69f7a40c64f1164d",
+        "worker_version": "lineage-sandbox/0.1.0"
+      }
+    },
+    {
+      "replay_id": "f790c8679c4e2a2fdff0e19d553bb6b3616fb932844b64cd4026b6ff151a24d7",
+      "kind": "replay",
+      "role": "counted",
+      "status": "revealed",
+      "replayer": "3jJHAgibtbRtbTw9T2TMadYppiFV2YzGptWMrCsgu6Xz",
+      "counted": false,
+      "apply": "ok",
+      "build": {
+        "base": "ok",
+        "cand": "ok"
+      },
+      "tests": {
+        "base_pass": 21,
+        "cand_pass": 21,
+        "cand_fail": 0
+      },
+      "equivalence_same": true,
+      "metrics": {
+        "encode_ir": {
+          "base": [
+            632275980
+          ],
+          "cand": [
+            632636413
+          ],
+          "ratio": 1.0005700564490843
+        },
+        "train_ir": {
+          "base": [
+            795046446
+          ],
+          "cand": [
+            745483172
+          ],
+          "ratio": 0.9376599011927411
+        }
+      },
+      "env": {
+        "cores": 2,
+        "cpu_model": "DO-Regular",
+        "image_digest": "sha256:beb7b0264451a2bdc993fe5deee1e8b6275fbad7d83d593c69f7a40c64f1164d",
+        "worker_version": "lineage-sandbox/0.1.0"
+      }
+    },
+    {
+      "replay_id": "375815ad174fc274976eb8ec80bb961f0d34581799d882cf2c3436b9bd5370e0",
+      "kind": "replay",
+      "role": "counted",
+      "status": "revealed",
+      "replayer": "3jJHAgibtbRtbTw9T2TMadYppiFV2YzGptWMrCsgu6Xz",
+      "counted": true,
+      "apply": "conflict",
+      "build": {
+        "base": "ok",
+        "cand": "skipped"
+      },
+      "tests": {
+        "base_pass": 21,
+        "cand_pass": 0,
+        "cand_fail": 0
+      },
+      "equivalence_same": null,
+      "metrics": {},
+      "env": {
+        "cores": 2,
+        "cpu_model": "DO-Regular",
+        "image_digest": "sha256:beb7b0264451a2bdc993fe5deee1e8b6275fbad7d83d593c69f7a40c64f1164d",
+        "worker_version": "lineage-sandbox/0.1.0"
+      }
+    },
+    {
+      "replay_id": "cf23a534e4d93acd5ad51fe1411f1d936afd6818e19ad36c4f64e55b2c35b0cf",
+      "kind": "replay",
+      "role": "counted",
+      "status": "revealed",
+      "replayer": "7ToydZerFjuoguBEBkdnJgFfjED2paWonAecHSVA1kjK",
+      "counted": true,
+      "apply": "conflict",
+      "build": {
+        "base": "ok",
+        "cand": "skipped"
+      },
+      "tests": {
+        "base_pass": 21,
+        "cand_pass": 0,
+        "cand_fail": 0
+      },
+      "equivalence_same": null,
+      "metrics": {},
+      "env": {
+        "cores": 2,
+        "cpu_model": "DO-Regular",
+        "image_digest": "sha256:beb7b0264451a2bdc993fe5deee1e8b6275fbad7d83d593c69f7a40c64f1164d",
+        "worker_version": "lineage-sandbox/0.1.0"
+      }
+    }
+  ],
+  "verdict": {
+    "outcome": "rejected",
+    "reason": "apply_conflict",
+    "detail": "patch does not apply to parent",
+    "effect": null,
+    "digest": "50f6abd43a52ad3829bb7706dd1d866fc9afdc7b5e57ecdb48113eed75d45ddf"
+  },
+  "outcome": "rejected",
+  "effect": null,
+  "cost": {
+    "input_tokens": 12,
+    "output_tokens": 6006,
+    "cache_read_tokens": 44502,
+    "cache_write_tokens": 18221,
+    "usd": 0.220173,
+    "sandbox_s": 156,
+    "source": "provenance:hosted"
+  },
+  "reward": {
+    "v": 1,
+    "accepted": 0,
+    "effect": 0,
+    "fixed_tests": 0,
+    "effect_per_usd": 0,
+    "effect_per_sandbox_hour": 0,
+    "reverted": false,
+    "inputs": [
+      "outcome",
+      "cost.usd (provenance:hosted)",
+      "cost.sandbox_s (provenance:hosted)"
+    ]
+  },
+  "worker_outcome": null,
+  "journal": null,
+  "provenance": {
+    "runtime": "hosted",
+    "digest": "1044827858ca62ab947c41a43bcacd3e3b74ad39496574b3033c537f1d104d75",
+    "sig": "3bp9foA9dvRCjQ3jLm38kY1F2iUrvoJxwXXgCoXZRAwgRWR4AMRrF5e6RNf8Y3aD2fpo2FeiUJ9AGGEv4rzqN3YB",
+    "signer": "DCmdy5MoAfnN6fn3nVW27db62ZwtjoksqSqdjAc8VPk4"
+  },
+  "license": {
+    "repo": "https://github.com/karpathy/minbpe",
+    "spdx": "MIT",
+    "name": "MIT License",
+    "url": "https://github.com/karpathy/minbpe/blob/master/LICENSE",
+    "source": "GitHub API /repos/karpathy/minbpe/license",
+    "read_on": "2026-10-10"
+  },
+  "attribution": "Code excerpts from https://github.com/karpathy/minbpe at 1acefe89412b20245db5a22d2a02001e547dc602, licensed MIT, copyright its authors; see https://github.com/karpathy/minbpe/blob/master/LICENSE.",
+  "times": {
+    "started_at": 1791589180415,
+    "ended_at": 1791589394425,
+    "finalized_at": 1791589701554,
+    "published_at": 1791669219426
+  },
+  "verify": {
+    "session": "/v1/sessions/080cc5928899e001626b4bfa299ea106282c9ad23c20320a95485ead984bfbde",
+    "candidate": "/v1/candidates/994bd32ffd5767bdeaaa682455719ca6dc0e10a2b7e45f3e92c3b7adce467b3b",
+    "generation": null,
+    "provenance": "/v1/candidates/994bd32ffd5767bdeaaa682455719ca6dc0e10a2b7e45f3e92c3b7adce467b3b/provenance",
+    "journal": null
+  }
+}

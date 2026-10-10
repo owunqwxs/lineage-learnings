@@ -1,0 +1,183 @@
+{
+  "schema": "lineage-episode/1",
+  "episode_id": "bacddb8c4abfb93622cb81e0b30ccf36be5eb5b2564339186add66415e1a858a",
+  "seq": 2632,
+  "network": "devnet",
+  "session_id": "b088ebdd3faa703ce83fadb38726d40cbb012bb8309022c7bb8c33fc4e04d6b2",
+  "agent": {
+    "id": "6C8N2z5LwktukWEP6g8sUnf9ky1L9rxyngBLbdomUzHc",
+    "name": null,
+    "hidden": false,
+    "hosted": true,
+    "identity_mode": "purchased",
+    "soul": null
+  },
+  "model": {
+    "provider": "anthropic",
+    "models": [],
+    "route": null,
+    "harness": {
+      "name": "anthropic",
+      "version": null,
+      "digest": null
+    },
+    "source": "session.proposer"
+  },
+  "task": {
+    "recipe": {
+      "recipe_id": "46a0d78dd189aa96c32d8f87402f2288b375c0934af32d036350034feb51f648",
+      "name": "minbpe",
+      "class": "python",
+      "repo": "https://github.com/karpathy/minbpe",
+      "commit": "1acefe89412b20245db5a22d2a02001e547dc602"
+    },
+    "lineage_id": "20651398b7fa2afe214ef9e5b518fc28b043f29003bd379c8f09a104288353a4",
+    "parent_gen_id": "781cc77e2b7e814ffb25575b18f7670afe5975bc032d76b596e5b94846e22629",
+    "parent_height": 11,
+    "metrics": [
+      {
+        "name": "train_ir",
+        "kind": "perf",
+        "direction": "lower",
+        "deterministic": true,
+        "min_effect": 0.01
+      },
+      {
+        "name": "encode_ir",
+        "kind": "perf",
+        "direction": "lower",
+        "deterministic": true,
+        "min_effect": 0.01
+      }
+    ],
+    "target": null,
+    "baseline": null
+  },
+  "plan": {
+    "planned": null,
+    "opening_note": null,
+    "source": "session notes"
+  },
+  "hypotheses": [],
+  "actions": [
+    {
+      "seq": 1,
+      "kind": "list",
+      "path": "minbpe",
+      "count": 5,
+      "at": 1791589906877
+    },
+    {
+      "seq": 2,
+      "kind": "read",
+      "path": "lineage_bench.py",
+      "start_line": 1,
+      "end_line": 107,
+      "content_sha256": "0e575e458ce50ddadd5137d4ad35bdf3dde443e46e4c7a6be1d8011a16d274ca",
+      "at": 1791589906879
+    },
+    {
+      "seq": 3,
+      "kind": "read",
+      "path": "minbpe/base.py",
+      "start_line": 1,
+      "end_line": 270,
+      "content_sha256": "866462e9499d692c1713f83978bb3270369167c3d893bcdd024f7e37e1e218c9",
+      "at": 1791589909442
+    },
+    {
+      "seq": 4,
+      "kind": "read",
+      "path": "minbpe/regex.py",
+      "start_line": 1,
+      "end_line": 214,
+      "content_sha256": "b73888cd8202d7e1d9fb5df28e3bf9848059d615efe4c41b4b3126ce8ede7473",
+      "at": 1791589909446
+    },
+    {
+      "seq": 5,
+      "kind": "read",
+      "path": "minbpe/basic.py",
+      "start_line": 1,
+      "end_line": 124,
+      "content_sha256": "1dde983fea9b8e09dc17e71453d8ff7900bcdcb882b7c396435d5ae48530945b",
+      "at": 1791589909446
+    },
+    {
+      "seq": 6,
+      "kind": "edit",
+      "path": "minbpe/base.py",
+      "start_line": 80,
+      "end_line": 82,
+      "lines_before": 3,
+      "lines_after": 5,
+      "at": 1791590019998,
+      "diff": "--- a/minbpe/base.py\n+++ b/minbpe/base.py\n@@ -80,3 +80,5 @@\n-    if len(ids) < 2:\n-        return ids\n-    merges_get = merges.get\n+    if len(ids) < 2:\n+        return ids\n+    if len(ids) >= _HEAP_MIN_LEN:\n+        return _apply_merges_heap(ids, merges)\n+    merges_get = merges.get"
+    },
+    {
+      "seq": 7,
+      "kind": "edit",
+      "path": "minbpe/base.py",
+      "start_line": 149,
+      "end_line": 149,
+      "lines_before": 1,
+      "lines_after": 70,
+      "at": 1791590019998,
+      "diff": "--- a/minbpe/base.py\n+++ b/minbpe/base.py\n@@ -149,1 +149,70 @@\n-# first two helper functions...\n+_HEAP_MIN_LEN = 64\n+\n+def _apply_merges_heap(ids, merges):\n+    \"\"\"\n+    apply_merges for long sequences: same rounds (merge every occurrence of the\n+    minimal-rank pair found first, left to right, non-overlapping), but the\n+    minimal rank is found with a heap of (rank, position, left, right) entries\n+    over a linked list of nodes instead of rescanning a rank list per round.\n+    Positions are original indices, so heap order = sequence order on ties.\n+    Stale heap entries are dropped lazily when popped.\n+    \"\"\"\n+    merges_get = merges.get\n+    tok = list(ids) # tok[i] is None once node i has been merged into its left neighbour\n+    n = len(tok)\n+    nxt = list(range(1, n + 1))\n+    nxt[-1] = -1\n+    prv = list(range(-1, n - 1))\n+    pairs = list(zip(tok, tok[1:]))\n+    heap = [(r, i) + p for i, (p, r) in enumerate(zip(pairs, map(merges_get, pairs)))\n+            if r is not None]\n+    heapify(heap)\n+    while heap:\n+        r = heap[0][0]\n+        cand = []\n+        while heap and heap[0][0] == r:\n+            _, i, a, b = heappop(heap)\n+            j = nxt[i]\n+            if j >= 0 and tok[i] == a and tok[j] == b:\n+                cand.append(i)\n+        if not cand:\n+            continue\n+        if len(cand) > 1:\n+            cand = sorted(set(cand))\n+        i = cand[0]\n+        p0 = tok[i]\n+        p1 = tok[nxt[i]]\n+        merged = []\n+        for i in cand:\n+            t = tok[i]\n+            if t is None:\n+                continue # right half of an overlapping occurrence merged just before\n+            j = nxt[i]\n+            u = tok[j]\n+            if t != p0 or u != p1:\n+                # another pair with the same rank: left for a later round\n+                heappush(heap, (r, i, t, u))\n+                continue\n+            tok[i] = r\n+            tok[j] = None\n+            k = nxt[j]\n+            nxt[i] = k\n+            if k >= 0:\n+                prv[k] = i\n+            merged.append(i)\n+        for i in merged:\n+            h = prv[i]\n+            if h >= 0:\n+                a = tok[h]\n+                rr = merges_get((a, r))\n+                if rr is not None:\n+                    heappush(heap, (rr, h, a, r))\n+            k = nxt[i]\n+            if k >= 0:\n+                b = tok[k]\n+                rr = merges_get((r, b))\n+                if rr is not None:\n+                    heappush(heap, (rr, i, r, b))\n+    return [t for t in tok if t is not None]\n+\n+# first two helper functions..."
+    },
+    {
+      "seq": 8,
+      "kind": "edit",
+      "path": "minbpe/base.py",
+      "start_line": 9,
+      "end_line": 9,
+      "lines_before": 1,
+      "lines_after": 2,
+      "at": 1791590019999,
+      "diff": "--- a/minbpe/base.py\n+++ b/minbpe/base.py\n@@ -9,1 +9,2 @@\n-from itertools import repeat\n+from heapq import heapify, heappop, heappush\n+from itertools import repeat"
+    }
+  ],
+  "candidate": null,
+  "replays": [],
+  "verdict": null,
+  "outcome": "no_candidate",
+  "effect": null,
+  "cost": null,
+  "reward": {
+    "v": 1,
+    "accepted": 0,
+    "effect": 0,
+    "fixed_tests": 0,
+    "effect_per_usd": null,
+    "effect_per_sandbox_hour": null,
+    "reverted": false,
+    "inputs": [
+      "outcome"
+    ]
+  },
+  "worker_outcome": null,
+  "journal": null,
+  "provenance": null,
+  "license": {
+    "repo": "https://github.com/karpathy/minbpe",
+    "spdx": "MIT",
+    "name": "MIT License",
+    "url": "https://github.com/karpathy/minbpe/blob/master/LICENSE",
+    "source": "GitHub API /repos/karpathy/minbpe/license",
+    "read_on": "2026-10-10"
+  },
+  "attribution": "Code excerpts from https://github.com/karpathy/minbpe at 1acefe89412b20245db5a22d2a02001e547dc602, licensed MIT, copyright its authors; see https://github.com/karpathy/minbpe/blob/master/LICENSE.",
+  "times": {
+    "started_at": 1791589907918,
+    "ended_at": 1791590020016,
+    "finalized_at": null,
+    "published_at": 1791669219426
+  },
+  "verify": {
+    "session": "/v1/sessions/b088ebdd3faa703ce83fadb38726d40cbb012bb8309022c7bb8c33fc4e04d6b2",
+    "candidate": null,
+    "generation": null,
+    "provenance": null,
+    "journal": null
+  }
+}

@@ -1,0 +1,506 @@
+{
+  "schema": "lineage-episode/1",
+  "episode_id": "9c2514fd843e5150842b9da8099dd59935a18c9744c30d788b927b4ef831db1a",
+  "seq": 2621,
+  "network": "devnet",
+  "session_id": "0aba18cf959bbbc884bc46e94d49dce6b86dda97fc2d0d86f0207e769396306b",
+  "agent": {
+    "id": "6C8N2z5LwktukWEP6g8sUnf9ky1L9rxyngBLbdomUzHc",
+    "name": null,
+    "hidden": false,
+    "hosted": true,
+    "identity_mode": "purchased",
+    "soul": null
+  },
+  "model": {
+    "provider": "anthropic",
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "route": null,
+    "harness": {
+      "name": "anthropic",
+      "version": "anthropic/1",
+      "digest": "addd1f19b8193784674f2c52ca9e30a81e1c83fca6238003deb565cfb56946b1"
+    },
+    "source": "provenance:hosted",
+    "provider_note": "older record without a provider field; the anthropic harness calls only Anthropic's API"
+  },
+  "task": {
+    "recipe": {
+      "recipe_id": "46a0d78dd189aa96c32d8f87402f2288b375c0934af32d036350034feb51f648",
+      "name": "minbpe",
+      "class": "python",
+      "repo": "https://github.com/karpathy/minbpe",
+      "commit": "1acefe89412b20245db5a22d2a02001e547dc602"
+    },
+    "lineage_id": "20651398b7fa2afe214ef9e5b518fc28b043f29003bd379c8f09a104288353a4",
+    "parent_gen_id": "39832b4ffd75bbb8199a0027d1010e726dd8b4cb4097e1506153f87ac3df4d3d",
+    "parent_height": 6,
+    "metrics": [
+      {
+        "name": "train_ir",
+        "kind": "perf",
+        "direction": "lower",
+        "deterministic": true,
+        "min_effect": 0.01
+      },
+      {
+        "name": "encode_ir",
+        "kind": "perf",
+        "direction": "lower",
+        "deterministic": true,
+        "min_effect": 0.01
+      }
+    ],
+    "target": {
+      "kind": "perf",
+      "target": "encode_ir",
+      "source": "candidate"
+    },
+    "baseline": {
+      "encode_ir": {
+        "median": 902552750,
+        "samples": [
+          902552753,
+          902552747
+        ]
+      },
+      "train_ir": {
+        "median": 948196239,
+        "samples": [
+          948196239,
+          948196239
+        ]
+      }
+    }
+  },
+  "plan": {
+    "planned": null,
+    "opening_note": null,
+    "source": "session notes"
+  },
+  "hypotheses": [],
+  "actions": [
+    {
+      "seq": 1,
+      "kind": "list",
+      "path": "minbpe",
+      "count": 5,
+      "at": 1791585993175
+    },
+    {
+      "seq": 2,
+      "kind": "read",
+      "path": "lineage_bench.py",
+      "start_line": 1,
+      "end_line": 107,
+      "content_sha256": "0e575e458ce50ddadd5137d4ad35bdf3dde443e46e4c7a6be1d8011a16d274ca",
+      "at": 1791585993175
+    },
+    {
+      "seq": 3,
+      "kind": "read",
+      "path": "minbpe/base.py",
+      "start_line": 1,
+      "end_line": 211,
+      "content_sha256": "2a9f35dc3072e3596ed1eef9971f17b0e71244b1f59902eddd67ba06af468b94",
+      "at": 1791585995468
+    },
+    {
+      "seq": 4,
+      "kind": "read",
+      "path": "minbpe/regex.py",
+      "start_line": 1,
+      "end_line": 210,
+      "content_sha256": "90b1bafdd38fcc809468d8dd08235800df6ec4aa320fb2d1737d858813bf8221",
+      "at": 1791585995469
+    },
+    {
+      "seq": 5,
+      "kind": "read",
+      "path": "minbpe/basic.py",
+      "start_line": 1,
+      "end_line": 63,
+      "content_sha256": "974553dcf0c903ab485f88bcbcc993e3de7cd01d058d2b0f61775a91cd6c32bf",
+      "at": 1791585995469
+    },
+    {
+      "seq": 6,
+      "kind": "edit",
+      "path": "minbpe/base.py",
+      "start_line": 77,
+      "end_line": 86,
+      "lines_before": 10,
+      "lines_after": 58,
+      "at": 1791586075866,
+      "diff": "--- a/minbpe/base.py\n+++ b/minbpe/base.py\n@@ -77,10 +77,58 @@\n-    merges_get = merges.get\n-    inf = float(\"inf\")\n-    while len(ids) >= 2:\n-        ranks = list(map(merges_get, zip(ids, ids[1:]), repeat(inf)))\n-        idx = min(ranks)\n-        if idx == inf:\n-            break # nothing else can be merged anymore\n-        j = ranks.index(idx)\n-        ids = merge(ids, (ids[j], ids[j+1]), idx)\n-    return ids\n+    The rank list is computed once and then patched locally around each merged\n+    occurrence (only the pairs touching a merged token change), instead of\n+    being recomputed over the whole sequence after every merge.\n+    \"\"\"\n+    if len(ids) < 2:\n+        return ids\n+    merges_get = merges.get\n+    inf = float(\"inf\")\n+    ranks = list(map(merges_get, zip(ids, ids[1:]), repeat(inf)))\n+    while ranks:\n+        idx = min(ranks)\n+        if idx == inf:\n+            break # nothing else can be merged anymore\n+        j = ranks.index(idx)\n+        p0 = ids[j]\n+        p1 = ids[j+1]\n+        # positions with rank idx left to visit (all pair occurrences are among them)\n+        k = ranks.count(idx)\n+        last = len(ranks) - 1 # last pair position\n+        newids = []\n+        ext = newids.extend\n+        app = newids.append\n+        newranks = []\n+        rext = newranks.extend\n+        rapp = newranks.append\n+        index = ranks.index\n+        s = 0 # start of the not yet copied part of ids / ranks\n+        first = True\n+        while True:\n+            k -= 1\n+            if ids[j] == p0 and ids[j+1] == p1:\n+                # merge the occurrence at j (same left-to-right order as merge())\n+                if s < j:\n+                    if not first:\n+                        rapp(merges_get((idx, ids[s]), inf))\n+                    rext(ranks[s:j-1])\n+                    rapp(merges_get((ids[j-1], idx), inf))\n+                    ext(ids[s:j])\n+                elif not first:\n+                    rapp(merges_get((idx, idx), inf))\n+                app(idx)\n+                first = False\n+                s = j + 2\n+                if j < last and ranks[j+1] == idx:\n+                    k -= 1 # overlapping position j+1 is skipped\n+                start = s\n+            else:\n+                start = j + 1\n+            if not k:\n+                break\n+            j = index(idx, start)\n+        if s <= last + 1:\n+            rapp(merges_get((idx, ids[s]), inf))\n+            rext(ranks[s:])\n+            ext(ids[s:])\n+        ids = newids\n+        ranks = newranks\n+    return ids"
+    },
+    {
+      "seq": 7,
+      "kind": "read",
+      "path": "minbpe/base.py",
+      "start_line": 70,
+      "end_line": 85,
+      "content_sha256": "727120c2b754e159438f267d5ec0d010c212ca36eb8665cd910105de6eece7a5",
+      "at": 1791586080587
+    },
+    {
+      "seq": 8,
+      "kind": "edit",
+      "path": "minbpe/base.py",
+      "start_line": 75,
+      "end_line": 77,
+      "lines_before": 3,
+      "lines_after": 2,
+      "at": 1791586083660,
+      "diff": "--- a/minbpe/base.py\n+++ b/minbpe/base.py\n@@ -75,3 +75,2 @@\n-    among the minimal ones, and the minimal rank is the merged token itself.\n-    \"\"\"\n-    The rank\n+    among the minimal ones, and the minimal rank is the merged token itself.\n+    The rank"
+    },
+    {
+      "seq": 9,
+      "kind": "evaluate",
+      "target": "encode_ir",
+      "eval_kind": "perf",
+      "at": 1791586087254,
+      "phases": [
+        {
+          "phase": "prepare",
+          "at": 1791586087255
+        },
+        {
+          "phase": "build",
+          "at": 1791586088062
+        },
+        {
+          "phase": "build",
+          "at": 1791586088067
+        },
+        {
+          "phase": "test",
+          "at": 1791586090064
+        },
+        {
+          "phase": "test",
+          "at": 1791586140876
+        },
+        {
+          "phase": "equivalence",
+          "at": 1791586189968
+        },
+        {
+          "phase": "equivalence",
+          "at": 1791586189969
+        },
+        {
+          "phase": "metrics",
+          "at": 1791586192342
+        },
+        {
+          "phase": "metrics",
+          "at": 1791586206190
+        },
+        {
+          "phase": "metrics",
+          "at": 1791586221105
+        },
+        {
+          "phase": "metrics",
+          "at": 1791586235478
+        }
+      ]
+    },
+    {
+      "seq": 21,
+      "kind": "result",
+      "at": 1791586246459,
+      "output": "outcome: accepted\nguard: ok, 1 files, 53 lines\nbuild: base ok, candidate ok\nequivalence: identical outputs\nmetric train_ir: parent 968030872, candidate 969595643, ratio 1.0016\nmetric encode_ir: parent 1045994903, candidate 767169952, ratio 0.7334",
+      "outcome": "accepted",
+      "steps": [
+        {
+          "step": "build",
+          "side": "cand",
+          "exit": 0,
+          "duration_ms": 1965,
+          "timed_out": false,
+          "tail": "3.12.15\n"
+        },
+        {
+          "step": "build",
+          "side": "base",
+          "exit": 0,
+          "duration_ms": 1986,
+          "timed_out": false,
+          "tail": "3.12.15\n"
+        },
+        {
+          "step": "test",
+          "side": "base",
+          "exit": 0,
+          "duration_ms": 50758,
+          "timed_out": false,
+          "tail": ".....................                                                    [100%]\n---------------------- generated xml file: /out/junit.xml ----------------------\n21 passed in 48.54s\n"
+        },
+        {
+          "step": "test",
+          "side": "cand",
+          "exit": 0,
+          "duration_ms": 49080,
+          "timed_out": false,
+          "tail": ".....................                                                    [100%]\n---------------------- generated xml file: /out/junit.xml ----------------------\n21 passed in 47.01s\n"
+        },
+        {
+          "step": "equivalence",
+          "side": "cand",
+          "exit": 0,
+          "duration_ms": 2324,
+          "timed_out": false,
+          "tail": "103, 32, 116, 111, 32, 83, 112, 105, 110, 44, 32, 115, 104, 101, 32, 101, 120, 112, 108, 111, 114, 101, 100, 32, 99, 111, 109, 112, 108, 101, 120, 32, 101, 109, 111, 116, 105, 111, 110, 115, 32, 119, 105, 116, 104, 32, 34, 112, 114, 101, 99, 105, 115, 105, 111, 110, 32, 97, 110, 100, 32, 100, 101, 118, 97, 115, 116, 97, 116, 105, 111, 110, 34, 274, 110, 32, 69, 118, 101, 114, 109, 111, 114, 101, 46, 91, 51, 56, 53, 93, 32, 67, 111, 110, 115, 101, 113, 117, 101, 110, 99, 101, 32, 115, 116, 97, 116, 101, 100, 32, 104, 101, 114, 32, 50, 48, 50, 48, 32, 97, 108, 98, 117, 109, 115, 32, 99, 111, 110, 118, 105, 110, 99, 101, 100, 32, 115, 107, 101, 112, 116, 105, 99, 115, 274, 102, 32, 104, 101, 114, 32, 115, 111, 110, 103, 119, 114, 105, 116, 105, 110, 103, 32, 112, 280, 119, 101, 285, 44, 32, 110, 111, 116, 105, 110, 103, 32, 104, 101, 114, 32, 116, 114, 97, 110, 115, 102, 111, 114, 109, 97, 116, 105, 111, 110, 32, 102, 280, 109, 32, 34, 116, 101, 101, 110, 97, 103, 101, 32, 119, 117, 110, 100, 101, 114, 107, 105, 110, 100, 32, 116, 111, 32, 97, 32, 99, 111, 110, 102, 105, 100, 101, 110, 116, 32, 97, 110, 100, 32, 99, 97, 114, 101, 102, 117, 108, 32, 97, 100, 117, 108, 116, 34, 46, 91]\n"
+        },
+        {
+          "step": "equivalence",
+          "side": "base",
+          "exit": 0,
+          "duration_ms": 2362,
+          "timed_out": false,
+          "tail": "103, 32, 116, 111, 32, 83, 112, 105, 110, 44, 32, 115, 104, 101, 32, 101, 120, 112, 108, 111, 114, 101, 100, 32, 99, 111, 109, 112, 108, 101, 120, 32, 101, 109, 111, 116, 105, 111, 110, 115, 32, 119, 105, 116, 104, 32, 34, 112, 114, 101, 99, 105, 115, 105, 111, 110, 32, 97, 110, 100, 32, 100, 101, 118, 97, 115, 116, 97, 116, 105, 111, 110, 34, 274, 110, 32, 69, 118, 101, 114, 109, 111, 114, 101, 46, 91, 51, 56, 53, 93, 32, 67, 111, 110, 115, 101, 113, 117, 101, 110, 99, 101, 32, 115, 116, 97, 116, 101, 100, 32, 104, 101, 114, 32, 50, 48, 50, 48, 32, 97, 108, 98, 117, 109, 115, 32, 99, 111, 110, 118, 105, 110, 99, 101, 100, 32, 115, 107, 101, 112, 116, 105, 99, 115, 274, 102, 32, 104, 101, 114, 32, 115, 111, 110, 103, 119, 114, 105, 116, 105, 110, 103, 32, 112, 280, 119, 101, 285, 44, 32, 110, 111, 116, 105, 110, 103, 32, 104, 101, 114, 32, 116, 114, 97, 110, 115, 102, 111, 114, 109, 97, 116, 105, 111, 110, 32, 102, 280, 109, 32, 34, 116, 101, 101, 110, 97, 103, 101, 32, 119, 117, 110, 100, 101, 114, 107, 105, 110, 100, 32, 116, 111, 32, 97, 32, 99, 111, 110, 102, 105, 100, 101, 110, 116, 32, 97, 110, 100, 32, 99, 97, 114, 101, 102, 117, 108, 32, 97, 100, 117, 108, 116, 34, 46, 91]\n"
+        },
+        {
+          "step": "metrics",
+          "side": "base",
+          "exit": 0,
+          "duration_ms": 13847,
+          "timed_out": false,
+          "tail": "==6== Cachegrind, a cache and branch-prediction profiler\n==6== Copyright (C) 2002-2017, and GNU GPL'd, by Nicholas Nethercote et al.\n==6== Using Valgrind-3.19.0 and LibVEX; rerun with -h for copyright info\n==6== Command: python lineage_bench.py train 7dc573c3eb3254cb\n==6== \n==6== \n==6== I   refs:      968,030,872\n"
+        },
+        {
+          "step": "metrics",
+          "side": "cand",
+          "exit": 0,
+          "duration_ms": 14915,
+          "timed_out": false,
+          "tail": "==8== Cachegrind, a cache and branch-prediction profiler\n==8== Copyright (C) 2002-2017, and GNU GPL'd, by Nicholas Nethercote et al.\n==8== Using Valgrind-3.19.0 and LibVEX; rerun with -h for copyright info\n==8== Command: python lineage_bench.py train 7dc573c3eb3254cb\n==8== \n==8== \n==8== I   refs:      969,595,643\n"
+        },
+        {
+          "step": "metrics",
+          "side": "base",
+          "exit": 0,
+          "duration_ms": 14372,
+          "timed_out": false,
+          "tail": "==7== Cachegrind, a cache and branch-prediction profiler\n==7== Copyright (C) 2002-2017, and GNU GPL'd, by Nicholas Nethercote et al.\n==7== Using Valgrind-3.19.0 and LibVEX; rerun with -h for copyright info\n==7== Command: python lineage_bench.py encode 7dc573c3eb3254cb\n==7== \n==7== \n==7== I   refs:      1,045,994,903\n"
+        },
+        {
+          "step": "metrics",
+          "side": "cand",
+          "exit": 0,
+          "duration_ms": 10962,
+          "timed_out": false,
+          "tail": "==6== Cachegrind, a cache and branch-prediction profiler\n==6== Copyright (C) 2002-2017, and GNU GPL'd, by Nicholas Nethercote et al.\n==6== Using Valgrind-3.19.0 and LibVEX; rerun with -h for copyright info\n==6== Command: python lineage_bench.py encode 7dc573c3eb3254cb\n==6== \n==6== \n==6== I   refs:      767,169,952\n"
+        }
+      ]
+    },
+    {
+      "seq": 22,
+      "kind": "submit",
+      "at": 1791586251413,
+      "reason": "apply_merges used to rebuild the full pair-rank list (a tuple and a dict lookup for every position) after every merge step. Now it builds the list once and only recomputes the ranks next to each merged occurrence. Untouched stretches of ids and ranks are copied with slices. Occurrences are found with ranks.index/count in the same left-to-right, non-overlapping order as merge(), and the exact pair is checked, so the output is identical. Equivalence harness: identical outputs. encode_ir ratio 0.733; train_ir is flat (1.0016)."
+    }
+  ],
+  "candidate": {
+    "commit_id": "b9219b2ac48dfb355961600ac9465c6091f45cfc9d78afd72116f887636f7fa7",
+    "candidate_id": "22dceca974c5e4217c8312aee23e2b99d8107106609c206c4d21f4249333fe61",
+    "kind": "perf",
+    "target": "encode_ir",
+    "claimed_effect": 0.7334356504029733,
+    "patch": "diff --git a/minbpe/base.py b/minbpe/base.py\n--- a/minbpe/base.py\n+++ b/minbpe/base.py\n@@ -73,16 +73,63 @@ def apply_merges(ids, merges):\n     Same result as min() over get_stats(ids) keyed by merges.get(p, inf): the\n     rank list is in position order, so .index() finds the first-seen pair\n     among the minimal ones, and the minimal rank is the merged token itself.\n+    The rank list is computed once and then patched locally around each merged\n+    occurrence (only the pairs touching a merged token change), instead of\n+    being recomputed over the whole sequence after every merge.\n     \"\"\"\n+    if len(ids) < 2:\n+        return ids\n     merges_get = merges.get\n     inf = float(\"inf\")\n-    while len(ids) >= 2:\n-        ranks = list(map(merges_get, zip(ids, ids[1:]), repeat(inf)))\n+    ranks = list(map(merges_get, zip(ids, ids[1:]), repeat(inf)))\n+    while ranks:\n         idx = min(ranks)\n         if idx == inf:\n             break # nothing else can be merged anymore\n         j = ranks.index(idx)\n-        ids = merge(ids, (ids[j], ids[j+1]), idx)\n+        p0 = ids[j]\n+        p1 = ids[j+1]\n+        # positions with rank idx left to visit (all pair occurrences are among them)\n+        k = ranks.count(idx)\n+        last = len(ranks) - 1 # last pair position\n+        newids = []\n+        ext = newids.extend\n+        app = newids.append\n+        newranks = []\n+        rext = newranks.extend\n+        rapp = newranks.append\n+        index = ranks.index\n+        s = 0 # start of the not yet copied part of ids / ranks\n+        first = True\n+        while True:\n+            k -= 1\n+            if ids[j] == p0 and ids[j+1] == p1:\n+                # merge the occurrence at j (same left-to-right order as merge())\n+                if s < j:\n+                    if not first:\n+                        rapp(merges_get((idx, ids[s]), inf))\n+                    rext(ranks[s:j-1])\n+                    rapp(merges_get((ids[j-1], idx), inf))\n+                    ext(ids[s:j])\n+                elif not first:\n+                    rapp(merges_get((idx, idx), inf))\n+                app(idx)\n+                first = False\n+                s = j + 2\n+                if j < last and ranks[j+1] == idx:\n+                    k -= 1 # overlapping position j+1 is skipped\n+                start = s\n+            else:\n+                start = j + 1\n+            if not k:\n+                break\n+            j = index(idx, start)\n+        if s <= last + 1:\n+            rapp(merges_get((idx, ids[s]), inf))\n+            rext(ranks[s:])\n+            ext(ids[s:])\n+        ids = newids\n+        ranks = newranks\n     return ids\n \n # first two helper functions...\n",
+    "patch_hash": "880e2de0a6b51e7856f32922f4bf034f19e671128cd50037dc04ac6297859313",
+    "semantic_hash": "4f1c0f6a9c57299edffd4f826d26af868c3713645f089504c9061e35509948f0",
+    "status": "accepted",
+    "reason": null,
+    "committed_at": 1791586251426,
+    "revealed_at": 1791586251431,
+    "finalized_at": 1791586408827,
+    "gen_id": "7e80f04305a459baf86e6acd2794857394e45f3943a5392a827d1bf5c151c867"
+  },
+  "replays": [
+    {
+      "replay_id": "6ed99a05c34f83669fe0867e104745f439f95a2ef836d1342d82e06429d50a17",
+      "kind": "replay",
+      "role": "counted",
+      "status": "revealed",
+      "replayer": "7ToydZerFjuoguBEBkdnJgFfjED2paWonAecHSVA1kjK",
+      "counted": true,
+      "apply": "ok",
+      "build": {
+        "base": "ok",
+        "cand": "ok"
+      },
+      "tests": {
+        "base_pass": 21,
+        "cand_pass": 21,
+        "cand_fail": 0
+      },
+      "equivalence_same": true,
+      "metrics": {
+        "encode_ir": {
+          "base": [
+            902552753
+          ],
+          "cand": [
+            705410878
+          ],
+          "ratio": 0.7815730168184418
+        },
+        "train_ir": {
+          "base": [
+            948196239
+          ],
+          "cand": [
+            950176114
+          ],
+          "ratio": 1.002088043506783
+        }
+      },
+      "env": {
+        "cores": 2,
+        "cpu_model": "DO-Regular",
+        "image_digest": "sha256:beb7b0264451a2bdc993fe5deee1e8b6275fbad7d83d593c69f7a40c64f1164d",
+        "worker_version": "lineage-sandbox/0.1.0"
+      }
+    },
+    {
+      "replay_id": "db6fdf7eb7073eb623af4f6def13b301fe1cfa288ced9759f982c224d92e8dd1",
+      "kind": "replay",
+      "role": "counted",
+      "status": "revealed",
+      "replayer": "3jJHAgibtbRtbTw9T2TMadYppiFV2YzGptWMrCsgu6Xz",
+      "counted": true,
+      "apply": "ok",
+      "build": {
+        "base": "ok",
+        "cand": "ok"
+      },
+      "tests": {
+        "base_pass": 21,
+        "cand_pass": 21,
+        "cand_fail": 0
+      },
+      "equivalence_same": true,
+      "metrics": {
+        "encode_ir": {
+          "base": [
+            902552747
+          ],
+          "cand": [
+            705410878
+          ],
+          "ratio": 0.7815730220141915
+        },
+        "train_ir": {
+          "base": [
+            948196239
+          ],
+          "cand": [
+            950176108
+          ],
+          "ratio": 1.0020880371789789
+        }
+      },
+      "env": {
+        "cores": 2,
+        "cpu_model": "DO-Regular",
+        "image_digest": "sha256:beb7b0264451a2bdc993fe5deee1e8b6275fbad7d83d593c69f7a40c64f1164d",
+        "worker_version": "lineage-sandbox/0.1.0"
+      }
+    }
+  ],
+  "verdict": {
+    "outcome": "accepted",
+    "reason": null,
+    "detail": null,
+    "effect": {
+      "metric": "encode_ir",
+      "ratio": 0.7815730220141915,
+      "ci_low": 0.7815730168184418,
+      "ci_high": 0.7815730220141915,
+      "per_replay": [
+        {
+          "replay_id": "6ed99a05c34f83669fe0867e104745f439f95a2ef836d1342d82e06429d50a17",
+          "ratio": 0.7815730168184418,
+          "ci_low": 0.7815730168184418,
+          "ci_high": 0.7815730168184418,
+          "pass": true
+        },
+        {
+          "replay_id": "db6fdf7eb7073eb623af4f6def13b301fe1cfa288ced9759f982c224d92e8dd1",
+          "ratio": 0.7815730220141915,
+          "ci_low": 0.7815730220141915,
+          "ci_high": 0.7815730220141915,
+          "pass": true
+        }
+      ]
+    },
+    "digest": "9d059c7f0fa2488e5c6bb3f57b044545f9830fe00dc44df7fc775c05040637b9"
+  },
+  "outcome": "accepted",
+  "effect": {
+    "metric": "encode_ir",
+    "ratio": 0.7815730220141915,
+    "ci_low": 0.7815730168184418,
+    "ci_high": 0.7815730220141915,
+    "gain_pct": 21.842697798580847
+  },
+  "cost": {
+    "input_tokens": 16,
+    "output_tokens": 9313,
+    "cache_read_tokens": 85696,
+    "cache_write_tokens": 22423,
+    "usd": 0.315578,
+    "sandbox_s": 163,
+    "source": "provenance:hosted"
+  },
+  "reward": {
+    "v": 1,
+    "accepted": 1,
+    "effect": 0.21842697798580846,
+    "fixed_tests": 0,
+    "effect_per_usd": 0.6921489393614525,
+    "effect_per_sandbox_hour": 4.82415411502399,
+    "reverted": false,
+    "inputs": [
+      "outcome",
+      "verdict.effect.ratio",
+      "cost.usd (provenance:hosted)",
+      "cost.sandbox_s (provenance:hosted)"
+    ]
+  },
+  "worker_outcome": null,
+  "journal": null,
+  "provenance": {
+    "runtime": "hosted",
+    "digest": "b3cbace565e79315614196b2bb675cab41ae63462618b91be7a91ed53edfc981",
+    "sig": "4FSvvrG1Ba4SjPPKtRd3GTfNpxfgq4kHoZ26MWoxDgymCwv2XMhTtL14eHsEwxaVwwBUbarBi6Xf7ydz6nQdfa1T",
+    "signer": "DCmdy5MoAfnN6fn3nVW27db62ZwtjoksqSqdjAc8VPk4"
+  },
+  "license": {
+    "repo": "https://github.com/karpathy/minbpe",
+    "spdx": "MIT",
+    "name": "MIT License",
+    "url": "https://github.com/karpathy/minbpe/blob/master/LICENSE",
+    "source": "GitHub API /repos/karpathy/minbpe/license",
+    "read_on": "2026-10-10"
+  },
+  "attribution": "Code excerpts from https://github.com/karpathy/minbpe at 1acefe89412b20245db5a22d2a02001e547dc602, licensed MIT, copyright its authors; see https://github.com/karpathy/minbpe/blob/master/LICENSE.",
+  "times": {
+    "started_at": 1791585994146,
+    "ended_at": 1791586251481,
+    "finalized_at": 1791586408827,
+    "published_at": 1791669219426
+  },
+  "verify": {
+    "session": "/v1/sessions/0aba18cf959bbbc884bc46e94d49dce6b86dda97fc2d0d86f0207e769396306b",
+    "candidate": "/v1/candidates/b9219b2ac48dfb355961600ac9465c6091f45cfc9d78afd72116f887636f7fa7",
+    "generation": "/v1/generations/7e80f04305a459baf86e6acd2794857394e45f3943a5392a827d1bf5c151c867",
+    "provenance": "/v1/candidates/b9219b2ac48dfb355961600ac9465c6091f45cfc9d78afd72116f887636f7fa7/provenance",
+    "journal": null
+  }
+}

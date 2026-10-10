@@ -1,0 +1,493 @@
+{
+  "schema": "lineage-episode/1",
+  "episode_id": "3360c049d4d514b712a77febf2721777c510ed77b61aed62eea2b30d55223af5",
+  "seq": 2626,
+  "network": "devnet",
+  "session_id": "d604a4891a07bb8f3a1d6937e32d498217dd50f89fa3d3dd28139c1e05b29034",
+  "agent": {
+    "id": "6C8N2z5LwktukWEP6g8sUnf9ky1L9rxyngBLbdomUzHc",
+    "name": null,
+    "hidden": false,
+    "hosted": true,
+    "identity_mode": "purchased",
+    "soul": null
+  },
+  "model": {
+    "provider": "anthropic",
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "route": null,
+    "harness": {
+      "name": "anthropic",
+      "version": "anthropic/1",
+      "digest": "addd1f19b8193784674f2c52ca9e30a81e1c83fca6238003deb565cfb56946b1"
+    },
+    "source": "provenance:hosted",
+    "provider_note": "older record without a provider field; the anthropic harness calls only Anthropic's API"
+  },
+  "task": {
+    "recipe": {
+      "recipe_id": "46a0d78dd189aa96c32d8f87402f2288b375c0934af32d036350034feb51f648",
+      "name": "minbpe",
+      "class": "python",
+      "repo": "https://github.com/karpathy/minbpe",
+      "commit": "1acefe89412b20245db5a22d2a02001e547dc602"
+    },
+    "lineage_id": "20651398b7fa2afe214ef9e5b518fc28b043f29003bd379c8f09a104288353a4",
+    "parent_gen_id": "e5998e0182a260f5f9669c5f7eee6956b5c5e2ff0bca326bd1b4824f8d7b9d1a",
+    "parent_height": 8,
+    "metrics": [
+      {
+        "name": "train_ir",
+        "kind": "perf",
+        "direction": "lower",
+        "deterministic": true,
+        "min_effect": 0.01
+      },
+      {
+        "name": "encode_ir",
+        "kind": "perf",
+        "direction": "lower",
+        "deterministic": true,
+        "min_effect": 0.01
+      }
+    ],
+    "target": {
+      "kind": "perf",
+      "target": "encode_ir",
+      "source": "candidate"
+    },
+    "baseline": {
+      "encode_ir": {
+        "median": 742875316,
+        "samples": [
+          742875316,
+          742875316
+        ]
+      },
+      "train_ir": {
+        "median": 775728274,
+        "samples": [
+          775728277,
+          775728271
+        ]
+      }
+    }
+  },
+  "plan": {
+    "planned": null,
+    "opening_note": null,
+    "source": "session notes"
+  },
+  "hypotheses": [],
+  "actions": [
+    {
+      "seq": 1,
+      "kind": "list",
+      "path": "minbpe",
+      "count": 5,
+      "at": 1791588581317
+    },
+    {
+      "seq": 2,
+      "kind": "read",
+      "path": "lineage_bench.py",
+      "start_line": 1,
+      "end_line": 107,
+      "content_sha256": "0e575e458ce50ddadd5137d4ad35bdf3dde443e46e4c7a6be1d8011a16d274ca",
+      "at": 1791588581317
+    },
+    {
+      "seq": 3,
+      "kind": "read",
+      "path": "minbpe/base.py",
+      "start_line": 1,
+      "end_line": 258,
+      "content_sha256": "13afc068a79328272cef9520f14d6f50caf0eecbeda781703894a2d317fc1f4c",
+      "at": 1791588583297
+    },
+    {
+      "seq": 4,
+      "kind": "read",
+      "path": "minbpe/regex.py",
+      "start_line": 1,
+      "end_line": 210,
+      "content_sha256": "90b1bafdd38fcc809468d8dd08235800df6ec4aa320fb2d1737d858813bf8221",
+      "at": 1791588583297
+    },
+    {
+      "seq": 5,
+      "kind": "read",
+      "path": "minbpe/basic.py",
+      "start_line": 1,
+      "end_line": 118,
+      "content_sha256": "7e2e1f873d22c39c1305c9bf6ec5465ef6a021e5eaf55dfa58c6f034c642bed2",
+      "at": 1791588583298
+    },
+    {
+      "seq": 6,
+      "kind": "search",
+      "query": "apply_merges|_encode_chunk",
+      "matches": 9,
+      "at": 1791588606158
+    },
+    {
+      "seq": 7,
+      "kind": "edit",
+      "path": "minbpe/base.py",
+      "start_line": 84,
+      "end_line": 93,
+      "lines_before": 10,
+      "lines_after": 22,
+      "at": 1791588613305,
+      "diff": "--- a/minbpe/base.py\n+++ b/minbpe/base.py\n@@ -84,10 +84,22 @@\n-    ranks = list(map(merges_get, zip(ids, ids[1:]), repeat(inf)))\n-    while ranks:\n-        idx = min(ranks)\n-        if idx == inf:\n-            break # nothing else can be merged anymore\n-        j = ranks.index(idx)\n-        p0 = ids[j]\n-        p1 = ids[j+1]\n-        # positions with rank idx left to visit (all pair occurrences are among them)\n-        k = ranks.count(idx)\n+    ranks = list(map(merges_get, zip(ids, ids[1:]), repeat(inf)))\n+    ids = list(ids) # private copy: the single-occurrence path edits it in place\n+    while ranks:\n+        idx = min(ranks)\n+        if idx == inf:\n+            break # nothing else can be merged anymore\n+        j = ranks.index(idx)\n+        # positions with rank idx left to visit (all pair occurrences are among them)\n+        k = ranks.count(idx)\n+        if k == 1:\n+            # the common case: a single occurrence, splice it in place and\n+            # recompute only the (at most two) neighbouring ranks\n+            ids[j] = idx\n+            del ids[j+1]\n+            del ranks[j]\n+            if j:\n+                ranks[j-1] = merges_get((ids[j-1], idx), inf)\n+            if j < len(ranks):\n+                ranks[j] = merges_get((idx, ids[j+1]), inf)\n+            continue\n+        p0 = ids[j]\n+        p1 = ids[j+1]"
+    },
+    {
+      "seq": 8,
+      "kind": "evaluate",
+      "target": "encode_ir",
+      "eval_kind": "perf",
+      "at": 1791588617094,
+      "phases": [
+        {
+          "phase": "prepare",
+          "at": 1791588617094
+        },
+        {
+          "phase": "build",
+          "at": 1791588617805
+        },
+        {
+          "phase": "build",
+          "at": 1791588617808
+        },
+        {
+          "phase": "test",
+          "at": 1791588619744
+        },
+        {
+          "phase": "test",
+          "at": 1791588662967
+        },
+        {
+          "phase": "equivalence",
+          "at": 1791588710561
+        },
+        {
+          "phase": "equivalence",
+          "at": 1791588710564
+        },
+        {
+          "phase": "metrics",
+          "at": 1791588714405
+        },
+        {
+          "phase": "metrics",
+          "at": 1791588726861
+        },
+        {
+          "phase": "metrics",
+          "at": 1791588738679
+        },
+        {
+          "phase": "metrics",
+          "at": 1791588751550
+        }
+      ]
+    },
+    {
+      "seq": 20,
+      "kind": "result",
+      "at": 1791588763677,
+      "output": "outcome: accepted\nguard: ok, 1 files, 16 lines\nbuild: base ok, candidate ok\nequivalence: identical outputs\nmetric train_ir: parent 757536983, candidate 757847043, ratio 1.0004\nmetric encode_ir: parent 738384792, candidate 673059232, ratio 0.9115",
+      "outcome": "accepted",
+      "steps": [
+        {
+          "step": "build",
+          "side": "cand",
+          "exit": 0,
+          "duration_ms": 1851,
+          "timed_out": false,
+          "tail": "3.12.15\n"
+        },
+        {
+          "step": "build",
+          "side": "base",
+          "exit": 0,
+          "duration_ms": 1922,
+          "timed_out": false,
+          "tail": "3.12.15\n"
+        },
+        {
+          "step": "test",
+          "side": "base",
+          "exit": 0,
+          "duration_ms": 43185,
+          "timed_out": false,
+          "tail": ".....................                                                    [100%]\n---------------------- generated xml file: /out/junit.xml ----------------------\n21 passed in 41.49s\n"
+        },
+        {
+          "step": "test",
+          "side": "cand",
+          "exit": 0,
+          "duration_ms": 47580,
+          "timed_out": false,
+          "tail": ".....................                                                    [100%]\n---------------------- generated xml file: /out/junit.xml ----------------------\n21 passed in 45.54s\n"
+        },
+        {
+          "step": "equivalence",
+          "side": "base",
+          "exit": 0,
+          "duration_ms": 3756,
+          "timed_out": false,
+          "tail": "5, 32, 65, 109, 101, 114, 105, 99, 97, 110, 97, 44, 32, 119, 104, 105, 99, 104, 32, 99, 104, 114, 111, 110, 105, 99, 108, 285, 32, 112, 97, 114, 116, 115, 274, 102, 32, 83, 119, 105, 102, 116, 39, 115, 32, 108, 105, 102, 101, 32, 97, 110, 100, 32, 99, 97, 114, 267, 114, 44, 32, 112, 114, 101, 109, 105, 101, 114, 285, 32, 97, 116, 32, 116, 104, 101, 32, 50, 48, 50, 48, 32, 83, 117, 110, 100, 97, 110, 99, 101, 32, 70, 105, 108, 109, 32, 70, 101, 115, 116, 105, 118, 97, 108, 46, 91, 50, 49, 54, 93, 32, 83, 119, 105, 102, 116, 32, 115, 105, 103, 110, 285, 32, 97, 32, 103, 108, 111, 98, 97, 108, 32, 112, 117, 98, 108, 105, 115, 104, 105, 110, 103, 32, 100, 268, 108, 32, 119, 105, 116, 104, 32, 85, 110, 105, 118, 101, 114, 115, 97, 108, 32, 77, 117, 115, 105, 99, 32, 80, 117, 98, 108, 105, 115, 104, 105, 110, 103, 32, 71, 114, 111, 117, 112, 32, 105, 110, 32, 70, 101, 98, 114, 117, 97, 114, 121, 32, 50, 48, 50, 48, 32, 97, 102, 116, 101, 114, 32, 104, 101, 114, 32, 49, 54, 45, 121, 268, 114, 32, 99, 111, 110, 116, 114, 97, 99, 116, 32, 119, 105, 116, 104, 32, 83, 111, 110, 121, 47, 65, 84, 86, 32, 101, 120, 112, 105, 114, 285, 46, 91, 50, 49, 55, 93, 10, 65, 109, 105, 100, 115, 116, 32]\n"
+        },
+        {
+          "step": "equivalence",
+          "side": "cand",
+          "exit": 0,
+          "duration_ms": 3806,
+          "timed_out": false,
+          "tail": "5, 32, 65, 109, 101, 114, 105, 99, 97, 110, 97, 44, 32, 119, 104, 105, 99, 104, 32, 99, 104, 114, 111, 110, 105, 99, 108, 285, 32, 112, 97, 114, 116, 115, 274, 102, 32, 83, 119, 105, 102, 116, 39, 115, 32, 108, 105, 102, 101, 32, 97, 110, 100, 32, 99, 97, 114, 267, 114, 44, 32, 112, 114, 101, 109, 105, 101, 114, 285, 32, 97, 116, 32, 116, 104, 101, 32, 50, 48, 50, 48, 32, 83, 117, 110, 100, 97, 110, 99, 101, 32, 70, 105, 108, 109, 32, 70, 101, 115, 116, 105, 118, 97, 108, 46, 91, 50, 49, 54, 93, 32, 83, 119, 105, 102, 116, 32, 115, 105, 103, 110, 285, 32, 97, 32, 103, 108, 111, 98, 97, 108, 32, 112, 117, 98, 108, 105, 115, 104, 105, 110, 103, 32, 100, 268, 108, 32, 119, 105, 116, 104, 32, 85, 110, 105, 118, 101, 114, 115, 97, 108, 32, 77, 117, 115, 105, 99, 32, 80, 117, 98, 108, 105, 115, 104, 105, 110, 103, 32, 71, 114, 111, 117, 112, 32, 105, 110, 32, 70, 101, 98, 114, 117, 97, 114, 121, 32, 50, 48, 50, 48, 32, 97, 102, 116, 101, 114, 32, 104, 101, 114, 32, 49, 54, 45, 121, 268, 114, 32, 99, 111, 110, 116, 114, 97, 99, 116, 32, 119, 105, 116, 104, 32, 83, 111, 110, 121, 47, 65, 84, 86, 32, 101, 120, 112, 105, 114, 285, 46, 91, 50, 49, 55, 93, 10, 65, 109, 105, 100, 115, 116, 32]\n"
+        },
+        {
+          "step": "metrics",
+          "side": "base",
+          "exit": 0,
+          "duration_ms": 12455,
+          "timed_out": false,
+          "tail": "==6== Cachegrind, a cache and branch-prediction profiler\n==6== Copyright (C) 2002-2017, and GNU GPL'd, by Nicholas Nethercote et al.\n==6== Using Valgrind-3.19.0 and LibVEX; rerun with -h for copyright info\n==6== Command: python lineage_bench.py train 08258be3258d7b7e\n==6== \n==6== \n==6== I   refs:      757,536,983\n"
+        },
+        {
+          "step": "metrics",
+          "side": "cand",
+          "exit": 0,
+          "duration_ms": 11817,
+          "timed_out": false,
+          "tail": "==7== Cachegrind, a cache and branch-prediction profiler\n==7== Copyright (C) 2002-2017, and GNU GPL'd, by Nicholas Nethercote et al.\n==7== Using Valgrind-3.19.0 and LibVEX; rerun with -h for copyright info\n==7== Command: python lineage_bench.py train 08258be3258d7b7e\n==7== \n==7== \n==7== I   refs:      757,847,043\n"
+        },
+        {
+          "step": "metrics",
+          "side": "base",
+          "exit": 0,
+          "duration_ms": 12871,
+          "timed_out": false,
+          "tail": "==7== Cachegrind, a cache and branch-prediction profiler\n==7== Copyright (C) 2002-2017, and GNU GPL'd, by Nicholas Nethercote et al.\n==7== Using Valgrind-3.19.0 and LibVEX; rerun with -h for copyright info\n==7== Command: python lineage_bench.py encode 08258be3258d7b7e\n==7== \n==7== \n==7== I   refs:      738,384,792\n"
+        },
+        {
+          "step": "metrics",
+          "side": "cand",
+          "exit": 0,
+          "duration_ms": 12099,
+          "timed_out": false,
+          "tail": "==7== Cachegrind, a cache and branch-prediction profiler\n==7== Copyright (C) 2002-2017, and GNU GPL'd, by Nicholas Nethercote et al.\n==7== Using Valgrind-3.19.0 and LibVEX; rerun with -h for copyright info\n==7== Command: python lineage_bench.py encode 08258be3258d7b7e\n==7== \n==7== \n==7== I   refs:      673,059,232\n"
+        }
+      ]
+    },
+    {
+      "seq": 21,
+      "kind": "submit",
+      "at": 1791588766619,
+      "reason": "apply_merges: when the lowest-rank pair occurs only once (the common case for short regex chunks), splice it in place (ids[j]=idx; del ids[j+1]; del ranks[j]) and recompute just the two neighbouring ranks instead of rebuilding the ids and ranks lists. ids is copied once up front so the caller's list is never mutated. Multi-occurrence merges keep the existing path. Output is identical (equivalence passed); encode_ir ratio 0.9115."
+    }
+  ],
+  "candidate": {
+    "commit_id": "7cfc02db673a984b9360fb0c9f9af26aa9a11bfa8dabe879d6f73231d2d4d85a",
+    "candidate_id": "794cc2c2cf8b37fbfffe4e6002088a7d8969ee6044137725a6b75b54bc18e6bc",
+    "kind": "perf",
+    "target": "encode_ir",
+    "claimed_effect": 0.9115291096082054,
+    "patch": "diff --git a/minbpe/base.py b/minbpe/base.py\n--- a/minbpe/base.py\n+++ b/minbpe/base.py\n@@ -82,15 +82,27 @@ def apply_merges(ids, merges):\n     merges_get = merges.get\n     inf = float(\"inf\")\n     ranks = list(map(merges_get, zip(ids, ids[1:]), repeat(inf)))\n+    ids = list(ids) # private copy: the single-occurrence path edits it in place\n     while ranks:\n         idx = min(ranks)\n         if idx == inf:\n             break # nothing else can be merged anymore\n         j = ranks.index(idx)\n-        p0 = ids[j]\n-        p1 = ids[j+1]\n         # positions with rank idx left to visit (all pair occurrences are among them)\n         k = ranks.count(idx)\n+        if k == 1:\n+            # the common case: a single occurrence, splice it in place and\n+            # recompute only the (at most two) neighbouring ranks\n+            ids[j] = idx\n+            del ids[j+1]\n+            del ranks[j]\n+            if j:\n+                ranks[j-1] = merges_get((ids[j-1], idx), inf)\n+            if j < len(ranks):\n+                ranks[j] = merges_get((idx, ids[j+1]), inf)\n+            continue\n+        p0 = ids[j]\n+        p1 = ids[j+1]\n         last = len(ranks) - 1 # last pair position\n         newids = []\n         ext = newids.extend\n",
+    "patch_hash": "28e4b8e2a1ae50148d9a9e2a7c818ae7cbd50d42c1c95a0a2c37c9358673c54e",
+    "semantic_hash": "ea6f9a9c032773cf0cf9f83fed50bdcaa74b795057973d15ffc54dca01069234",
+    "status": "accepted",
+    "reason": null,
+    "committed_at": 1791588766647,
+    "revealed_at": 1791588766661,
+    "finalized_at": 1791588933530,
+    "gen_id": "fc39f3e91027fa85ce35f19ced278ca78121889978d50f3c55db3bdb12477a69"
+  },
+  "replays": [
+    {
+      "replay_id": "743c439d5ef53c4579102ea0638332ea3952779bfc3ea629f401662780caf57f",
+      "kind": "replay",
+      "role": "counted",
+      "status": "revealed",
+      "replayer": "7ToydZerFjuoguBEBkdnJgFfjED2paWonAecHSVA1kjK",
+      "counted": true,
+      "apply": "ok",
+      "build": {
+        "base": "ok",
+        "cand": "ok"
+      },
+      "tests": {
+        "base_pass": 21,
+        "cand_pass": 21,
+        "cand_fail": 0
+      },
+      "equivalence_same": true,
+      "metrics": {
+        "encode_ir": {
+          "base": [
+            742875316
+          ],
+          "cand": [
+            673725606
+          ],
+          "ratio": 0.9069161291125737
+        },
+        "train_ir": {
+          "base": [
+            775728277
+          ],
+          "cand": [
+            776187058
+          ],
+          "ratio": 1.000591419719511
+        }
+      },
+      "env": {
+        "cores": 2,
+        "cpu_model": "DO-Regular",
+        "image_digest": "sha256:beb7b0264451a2bdc993fe5deee1e8b6275fbad7d83d593c69f7a40c64f1164d",
+        "worker_version": "lineage-sandbox/0.1.0"
+      }
+    },
+    {
+      "replay_id": "f888bcc85aa373a6ca156c3c1386a27ba765abbccec51f324bdf51f7e993ca1a",
+      "kind": "replay",
+      "role": "counted",
+      "status": "revealed",
+      "replayer": "3jJHAgibtbRtbTw9T2TMadYppiFV2YzGptWMrCsgu6Xz",
+      "counted": true,
+      "apply": "ok",
+      "build": {
+        "base": "ok",
+        "cand": "ok"
+      },
+      "tests": {
+        "base_pass": 21,
+        "cand_pass": 21,
+        "cand_fail": 0
+      },
+      "equivalence_same": true,
+      "metrics": {
+        "encode_ir": {
+          "base": [
+            742875316
+          ],
+          "cand": [
+            673725600
+          ],
+          "ratio": 0.9069161210358482
+        },
+        "train_ir": {
+          "base": [
+            775728271
+          ],
+          "cand": [
+            776187064
+          ],
+          "ratio": 1.0005914351934198
+        }
+      },
+      "env": {
+        "cores": 2,
+        "cpu_model": "DO-Regular",
+        "image_digest": "sha256:beb7b0264451a2bdc993fe5deee1e8b6275fbad7d83d593c69f7a40c64f1164d",
+        "worker_version": "lineage-sandbox/0.1.0"
+      }
+    }
+  ],
+  "verdict": {
+    "outcome": "accepted",
+    "reason": null,
+    "detail": null,
+    "effect": {
+      "metric": "encode_ir",
+      "ratio": 0.9069161291125737,
+      "ci_low": 0.9069161210358482,
+      "ci_high": 0.9069161291125737,
+      "per_replay": [
+        {
+          "replay_id": "743c439d5ef53c4579102ea0638332ea3952779bfc3ea629f401662780caf57f",
+          "ratio": 0.9069161291125737,
+          "ci_low": 0.9069161291125737,
+          "ci_high": 0.9069161291125737,
+          "pass": true
+        },
+        {
+          "replay_id": "f888bcc85aa373a6ca156c3c1386a27ba765abbccec51f324bdf51f7e993ca1a",
+          "ratio": 0.9069161210358482,
+          "ci_low": 0.9069161210358482,
+          "ci_high": 0.9069161210358482,
+          "pass": true
+        }
+      ]
+    },
+    "digest": "38e66638cd908b2ecd4410b8290b8f153996d9b91de30d7ec4d5ccfdd768dec1"
+  },
+  "outcome": "accepted",
+  "effect": {
+    "metric": "encode_ir",
+    "ratio": 0.9069161291125737,
+    "ci_low": 0.9069161210358482,
+    "ci_high": 0.9069161291125737,
+    "gain_pct": 9.30838708874263
+  },
+  "cost": {
+    "input_tokens": 14,
+    "output_tokens": 3709,
+    "cache_read_tokens": 56731,
+    "cache_write_tokens": 18299,
+    "usd": 0.177077,
+    "sandbox_s": 152,
+    "source": "provenance:hosted"
+  },
+  "reward": {
+    "v": 1,
+    "accepted": 1,
+    "effect": 0.09308387088742631,
+    "fixed_tests": 0,
+    "effect_per_usd": 0.5256688948165279,
+    "effect_per_sandbox_hour": 2.204617994702202,
+    "reverted": false,
+    "inputs": [
+      "outcome",
+      "verdict.effect.ratio",
+      "cost.usd (provenance:hosted)",
+      "cost.sandbox_s (provenance:hosted)"
+    ]
+  },
+  "worker_outcome": null,
+  "journal": null,
+  "provenance": {
+    "runtime": "hosted",
+    "digest": "6a3431a69f8bb7442b0e98c7358151981e6505513cd5e790042fa26566d743da",
+    "sig": "5UfCY2kCZQ8UVwCi8eZCZDAWkg8UH5FznBoch8WmJiZPu7LAdHWJGqU42WYy4aGzB396ka9fHgkioVw7gaTh1ZA4",
+    "signer": "DCmdy5MoAfnN6fn3nVW27db62ZwtjoksqSqdjAc8VPk4"
+  },
+  "license": {
+    "repo": "https://github.com/karpathy/minbpe",
+    "spdx": "MIT",
+    "name": "MIT License",
+    "url": "https://github.com/karpathy/minbpe/blob/master/LICENSE",
+    "source": "GitHub API /repos/karpathy/minbpe/license",
+    "read_on": "2026-10-10"
+  },
+  "attribution": "Code excerpts from https://github.com/karpathy/minbpe at 1acefe89412b20245db5a22d2a02001e547dc602, licensed MIT, copyright its authors; see https://github.com/karpathy/minbpe/blob/master/LICENSE.",
+  "times": {
+    "started_at": 1791588583251,
+    "ended_at": 1791588766712,
+    "finalized_at": 1791588933530,
+    "published_at": 1791669219426
+  },
+  "verify": {
+    "session": "/v1/sessions/d604a4891a07bb8f3a1d6937e32d498217dd50f89fa3d3dd28139c1e05b29034",
+    "candidate": "/v1/candidates/7cfc02db673a984b9360fb0c9f9af26aa9a11bfa8dabe879d6f73231d2d4d85a",
+    "generation": "/v1/generations/fc39f3e91027fa85ce35f19ced278ca78121889978d50f3c55db3bdb12477a69",
+    "provenance": "/v1/candidates/7cfc02db673a984b9360fb0c9f9af26aa9a11bfa8dabe879d6f73231d2d4d85a/provenance",
+    "journal": null
+  }
+}
