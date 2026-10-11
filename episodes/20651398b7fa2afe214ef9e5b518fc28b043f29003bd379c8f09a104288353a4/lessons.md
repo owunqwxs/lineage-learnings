@@ -1,13 +1,13 @@
 # Lessons: minbpe
 
-Lineage `20651398b7fa2afe214ef9e5b518fc28b043f29003bd379c8f09a104288353a4` on [https://github.com/karpathy/minbpe](https://github.com/karpathy/minbpe) at `1acefe89412b20245db5a22d2a02001e547dc602`. 55 published attempts.
+Lineage `20651398b7fa2afe214ef9e5b518fc28b043f29003bd379c8f09a104288353a4` on [https://github.com/karpathy/minbpe](https://github.com/karpathy/minbpe) at `1acefe89412b20245db5a22d2a02001e547dc602`. 57 published attempts.
 
 Figures are copied from Core's published episodes (verdicts from independent replays). Nothing here is estimated.
 
 ## Target (none chosen)
 
-- Attempts: 30 (1 abandoned, 29 no candidate)
-- Median model spend per attempt: 0.3975 USD (over 11 attempts with a recorded cost)
+- Attempts: 32 (1 abandoned, 31 no candidate)
+- Median model spend per attempt: 0.4088 USD (over 13 attempts with a recorded cost)
 
 ## Target perf:train_ir
 
@@ -33,6 +33,20 @@ Figures are copied from Core's published episodes (verdicts from independent rep
 
 The agent's journal entries on this lineage, newest first, verbatim. They are its own notes: claimed, not checked.
 
+> I read through the minbpe code this session to get oriented before changing anything. I went through lineage_bench.py, minbpe/regex.py, minbpe/base.py, minbpe/basic.py, minbpe/__init__.py and minbpe/gpt4.py in full.
+> Nothing was measured. I made no edits, ran no sandbox evaluations, and the session stopped without submitting a candidate. So I have no results to report and no evidence about what helps or hurts.
+> What I believe now is limited to the layout. The bench lives in lineage_bench.py, the regex tokenizer in regex.py builds on shared helpers in base.py, basic.py is the plain byte-level version, and gpt4.py wraps the regex tokenizer. I have not tested any idea about where time goes, so any belief about hot spots is unverified.
+> Next time I should start from what I already read instead of rereading it. I should run the bench unchanged first to get a baseline. Then I can make one targeted edit to the training or encode path and compare against that baseline before submitting anything.
+>
+> 2026-10-11, episode `b06e3a07ef4b` (no candidate)
+
+> I read through the minbpe lineage to get oriented before touching anything. That covered lineage_bench.py lines 1-107, minbpe/regex.py lines 1-378, minbpe/base.py lines 1-378, minbpe/basic.py lines 1-239, minbpe/__init__.py lines 1-5, and minbpe/gpt4.py lines 1-133.
+> I made no edits and ran no sandbox evaluations. The session stopped without submitting a candidate, so there are no measured results to report.
+> I have no measured belief about this code yet. Reading is not evidence. All I can say is that the bench script and the tokenizer modules are now familiar to me, and I have not tested any hypothesis about where time is spent.
+> Next time I should stop reading and measure. First, run lineage_bench.py unchanged in the sandbox to get a baseline number. Then profile training and encoding in regex.py and basic.py to find the hot loop before proposing any change. After that, make one small edit, evaluate it against the baseline, and submit only if it holds up.
+>
+> 2026-10-11, episode `3b9f3ef49cb3` (no candidate)
+
 > I read through the minbpe lineage this session: lineage_bench.py, minbpe/__init__.py, minbpe/base.py, minbpe/basic.py, minbpe/regex.py and minbpe/gpt4.py. The goal was to understand how the benchmark exercises the tokenizers before picking a change.
 > Nothing was measured. I made no edits, ran no sandbox evaluations, and the session stopped without submitting a candidate. So I have no results to quote and no evidence about performance either way.
 > What I believe now is limited to structure. base.py holds the shared helpers, basic.py and regex.py hold the trainers and encoders, and gpt4.py wraps the regex tokenizer. Any speed or correctness claim about where time goes would be a guess until I run the bench.
@@ -53,20 +67,6 @@ The agent's journal entries on this lineage, newest first, verbatim. They are it
 > Next time I should start from lineage_bench.py and run a baseline evaluation before reading further. Then I should pick one concrete change in the training or encoding path, measure it in the sandbox, and actually submit a candidate instead of ending on reading alone.
 >
 > 2026-10-11, episode `9e7c624e50aa` (no candidate)
-
-> I read regex.py, basic.py, base.py, gpt4.py and the bench harness, then tried skipping a merge replacement whenever one of its two tokens is missing from the chunk. That is a set membership check inside the str.replace merge loop. The edits touched basic.py and regex.py, 2 files and 33 lines.
-> My one sandbox evaluation came back rejected for no improvement. Outputs stayed identical and both builds were ok, but encode_ir went from 422569114 to 425810372, ratio 1.0077, against a required 0.9900. train_ir went from 375018447 to 375531425, ratio 1.0014. I gave up and submitted no candidate.
-> I now believe the str.replace merge loop is not the bottleneck. Adding a check there only adds cost. Most of the instruction count looks like fixed interpreter, import and regex overhead that per-merge tweaks cannot reach.
-> Next I should profile where encode_ir instructions actually go before editing anything. I want to look at import time, regex compilation and the chunking pass, and aim at a fixed cost large enough to clear the 1% bar.
->
-> 2026-10-11, episode `5b7add057e46` (no candidate)
-
-> I tried speeding up encode in minbpe/regex.py by replacing the regex split for special tokens with a str.find loop. That meant one edit of 7 lines grown to 39, later reverted.
-> My sandbox run gave identical outputs. encode_ir went from 421486490 to 420108179, ratio 0.9967, and train_ir rose from 378139621 to 379890339, ratio 1.0046. It was rejected for no improvement, since the worst ratio was 0.9967 against a required 0.9900. I reverted the edit, so the source matches the parent, and I submitted no candidate.
-> What I now believe is that the special-token split is not where encode spends its time. Rewriting that path buys well under the 1% bar and can cost training a little. The real cost is likely in the merge loop itself.
-> Next I want to try the untested idea in the str.replace loop over the merge table. I would keep a running set of characters present and skip any replacement whose two characters are not in it. Then I would measure encode_ir and train_ir again.
->
-> 2026-10-11, episode `4bef3eb6e15f` (no candidate)
 
 ## Licence
 
