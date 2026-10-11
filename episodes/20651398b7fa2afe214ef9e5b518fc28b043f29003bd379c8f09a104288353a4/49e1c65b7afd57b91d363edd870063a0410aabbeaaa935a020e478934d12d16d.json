@@ -1,0 +1,553 @@
+{
+  "schema": "lineage-episode/1",
+  "episode_id": "49e1c65b7afd57b91d363edd870063a0410aabbeaaa935a020e478934d12d16d",
+  "seq": 2882,
+  "network": "devnet",
+  "session_id": "30d2bf009dc8e78ee67ff0e73969e36a9a9ef4ff0835b863e7b8971b6ab6086a",
+  "agent": {
+    "id": "6C8N2z5LwktukWEP6g8sUnf9ky1L9rxyngBLbdomUzHc",
+    "name": null,
+    "hidden": false,
+    "hosted": true,
+    "identity_mode": "purchased",
+    "soul": null
+  },
+  "model": {
+    "provider": "anthropic",
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "route": {
+      "model": {
+        "id": "claude-opus-5-5",
+        "provider": "anthropic"
+      },
+      "upstream": [],
+      "via": "direct"
+    },
+    "harness": {
+      "name": "anthropic",
+      "version": "anthropic/1",
+      "digest": "397a4a3b083a1923ef12e2d35acf8f4dd01c59298cdccab593c73cf528d72aa6"
+    },
+    "source": "provenance:hosted"
+  },
+  "task": {
+    "recipe": {
+      "recipe_id": "46a0d78dd189aa96c32d8f87402f2288b375c0934af32d036350034feb51f648",
+      "name": "minbpe",
+      "class": "python",
+      "repo": "https://github.com/karpathy/minbpe",
+      "commit": "1acefe89412b20245db5a22d2a02001e547dc602"
+    },
+    "lineage_id": "20651398b7fa2afe214ef9e5b518fc28b043f29003bd379c8f09a104288353a4",
+    "parent_gen_id": "693b73fd368e46b06b8df82f17cd5aca307a73e14ee7295f82a71a24f979b1a9",
+    "parent_height": 25,
+    "metrics": [
+      {
+        "name": "train_ir",
+        "kind": "perf",
+        "direction": "lower",
+        "deterministic": true,
+        "min_effect": 0.01
+      },
+      {
+        "name": "encode_ir",
+        "kind": "perf",
+        "direction": "lower",
+        "deterministic": true,
+        "min_effect": 0.01
+      }
+    ],
+    "target": {
+      "kind": "perf",
+      "target": "train_ir",
+      "source": "candidate"
+    },
+    "baseline": {
+      "encode_ir": {
+        "median": 420017819,
+        "samples": [
+          420017822,
+          420017816
+        ]
+      },
+      "train_ir": {
+        "median": 380499892,
+        "samples": [
+          380499892,
+          380499892
+        ]
+      }
+    }
+  },
+  "plan": {
+    "planned": null,
+    "opening_note": "My notes say I've spent several sessions only reading, and that adding per-merge Python checks to encode made things slower. This time I'll look at the bench and the hot paths once, then pick one algorithmic change, most likely in training or in fixed setup cost, and evaluate it instead of re-reading.",
+    "source": "worker_report + session notes"
+  },
+  "hypotheses": [
+    "My notes say I've spent several sessions only reading, and that adding per-merge Python checks to encode made things slower. This time I'll look at the bench and the hot paths once, then pick one algorithmic change, most likely in training or in fixed setup cost, and evaluate it instead of re-reading.",
+    "Already heavily optimized. Let me look at regex.py."
+  ],
+  "actions": [
+    {
+      "seq": 1,
+      "kind": "note",
+      "at": 1791680139532,
+      "text": "My notes say I've spent several sessions only reading, and that adding per-merge Python checks to encode made things slower. This time I'll look at the bench and the hot paths once, then pick one algorithmic change, most likely in training or in fixed setup cost, and evaluate it instead of re-reading."
+    },
+    {
+      "seq": 2,
+      "kind": "read",
+      "path": "lineage_bench.py",
+      "start_line": 1,
+      "end_line": 107,
+      "content_sha256": "0e575e458ce50ddadd5137d4ad35bdf3dde443e46e4c7a6be1d8011a16d274ca",
+      "at": 1791680139537
+    },
+    {
+      "seq": 3,
+      "kind": "read",
+      "path": "minbpe/base.py",
+      "start_line": 1,
+      "end_line": 378,
+      "content_sha256": "72c60636c033325e93d03e55010e59b1a4b180eef1aaaf57b5891b6247fc90bc",
+      "at": 1791680139545
+    },
+    {
+      "seq": 4,
+      "kind": "note",
+      "at": 1791680143089,
+      "text": "Already heavily optimized. Let me look at regex.py."
+    },
+    {
+      "seq": 5,
+      "kind": "read",
+      "path": "minbpe/regex.py",
+      "start_line": 1,
+      "end_line": 378,
+      "content_sha256": "7a1948d4481d940d3702a1c987845faa835670db2c62daee8c10b1eb8cfcc589",
+      "at": 1791680143092
+    },
+    {
+      "seq": 6,
+      "kind": "read",
+      "path": "minbpe/__init__.py",
+      "start_line": 1,
+      "end_line": 5,
+      "content_sha256": "d01f1961bdef63cec9c0435053c303756a7d329a59ca465f84f65383d9174119",
+      "at": 1791680148192
+    },
+    {
+      "seq": 7,
+      "kind": "read",
+      "path": "minbpe/gpt4.py",
+      "start_line": 1,
+      "end_line": 40,
+      "content_sha256": "ec8e5229cc991ee23634e235cf53ef98b8e06774edb71f68cba39e253a5c5a9b",
+      "at": 1791680148194
+    },
+    {
+      "seq": 8,
+      "kind": "read",
+      "path": "minbpe/basic.py",
+      "start_line": 1,
+      "end_line": 239,
+      "content_sha256": "8c35dd5724c22e5ee4fb54be4553e40f2a15bac06a3f261d9d7322091f856438",
+      "at": 1791680148195
+    },
+    {
+      "seq": 9,
+      "kind": "search",
+      "query": "import",
+      "matches": 60,
+      "at": 1791680210223
+    },
+    {
+      "seq": 10,
+      "kind": "write",
+      "path": "minbpe/__init__.py",
+      "start_line": 1,
+      "end_line": 5,
+      "lines_before": 5,
+      "lines_after": 12,
+      "at": 1791680217838,
+      "diff": "--- a/minbpe/__init__.py\n+++ b/minbpe/__init__.py\n@@ -1,5 +1,12 @@\n-from .base import Tokenizer\n-from .basic import BasicTokenizer\n-from .regex import RegexTokenizer\n-from .gpt4 import GPT4Tokenizer\n-\n+from .base import Tokenizer\n+from .basic import BasicTokenizer\n+from .regex import RegexTokenizer\n+\n+\n+def __getattr__(name):\n+    # GPT4Tokenizer is loaded on first access: most users never need it\n+    if name == \"GPT4Tokenizer\":\n+        from .gpt4 import GPT4Tokenizer\n+        return GPT4Tokenizer\n+    raise AttributeError(f\"module {__name__!r} has no attribute {name!r}\")\n+"
+    },
+    {
+      "seq": 11,
+      "kind": "edit",
+      "path": "minbpe/base.py",
+      "start_line": 8,
+      "end_line": 9,
+      "lines_before": 2,
+      "lines_after": 1,
+      "at": 1791680217839,
+      "diff": "--- a/minbpe/base.py\n+++ b/minbpe/base.py\n@@ -8,2 +8,1 @@\n-import unicodedata\n-from itertools import repeat\n+from itertools import repeat"
+    },
+    {
+      "seq": 12,
+      "kind": "edit",
+      "path": "minbpe/base.py",
+      "start_line": 260,
+      "end_line": 261,
+      "lines_before": 2,
+      "lines_after": 3,
+      "at": 1791680217841,
+      "diff": "--- a/minbpe/base.py\n+++ b/minbpe/base.py\n@@ -260,2 +260,3 @@\n-    chars = []\n-    for ch in s:\n+    import unicodedata # only needed for pretty printing, keep it off the import path\n+    chars = []\n+    for ch in s:"
+    },
+    {
+      "seq": 13,
+      "kind": "evaluate",
+      "target": "train_ir",
+      "eval_kind": "perf",
+      "at": 1791680220274,
+      "phases": [
+        {
+          "phase": "prepare",
+          "at": 1791680220278
+        },
+        {
+          "phase": "build",
+          "at": 1791680222794
+        },
+        {
+          "phase": "build",
+          "at": 1791680222799
+        },
+        {
+          "phase": "test",
+          "at": 1791680225345
+        },
+        {
+          "phase": "test",
+          "at": 1791680288416
+        },
+        {
+          "phase": "equivalence",
+          "at": 1791680342350
+        },
+        {
+          "phase": "equivalence",
+          "at": 1791680342359
+        },
+        {
+          "phase": "metrics",
+          "at": 1791680344717
+        },
+        {
+          "phase": "metrics",
+          "at": 1791680355570
+        },
+        {
+          "phase": "metrics",
+          "at": 1791680366165
+        },
+        {
+          "phase": "metrics",
+          "at": 1791680377459
+        }
+      ]
+    },
+    {
+      "seq": 25,
+      "kind": "result",
+      "at": 1791680389398,
+      "output": "outcome: accepted\nguard: ok, 2 files, 11 lines\nbuild: base ok, candidate ok\nequivalence: identical outputs\nmetric train_ir: parent 366746317, candidate 359895235, ratio 0.9813\nmetric encode_ir: parent 416189055, candidate 409886529, ratio 0.9849",
+      "outcome": "accepted",
+      "steps": [
+        {
+          "step": "build",
+          "side": "base",
+          "exit": 0,
+          "duration_ms": 2275,
+          "timed_out": false,
+          "tail": "3.12.15\n"
+        },
+        {
+          "step": "build",
+          "side": "cand",
+          "exit": 0,
+          "duration_ms": 2500,
+          "timed_out": false,
+          "tail": "3.12.15\n"
+        },
+        {
+          "step": "test",
+          "side": "base",
+          "exit": 0,
+          "duration_ms": 62938,
+          "timed_out": false,
+          "tail": ".....................                                                    [100%]\n---------------------- generated xml file: /out/junit.xml ----------------------\n21 passed in 60.28s (0:01:00)\n"
+        },
+        {
+          "step": "test",
+          "side": "cand",
+          "exit": 0,
+          "duration_ms": 53903,
+          "timed_out": false,
+          "tail": ".....................                                                    [100%]\n---------------------- generated xml file: /out/junit.xml ----------------------\n21 passed in 51.61s\n"
+        },
+        {
+          "step": "equivalence",
+          "side": "base",
+          "exit": 0,
+          "duration_ms": 2051,
+          "timed_out": false,
+          "tail": ", 32, 69, 110, 111, 117, 103, 104, 32, 116, 111, 32, 70, 101, 101, 100, 32, 39, 79, 118, 101, 114, 32, 49, 50, 53, 44, 48, 48, 48, 39, 32, 283, 32, 84, 97, 109, 112, 97, 32, 70, 111, 111, 100, 32, 66, 97, 110, 107, 32, 65, 104, 267, 100, 268, 102, 32, 84, 104, 101, 32, 69, 114, 97, 115, 32, 84, 111, 117, 114, 32, 83, 116, 111, 112, 34, 46, 32, 66, 105, 108, 108, 269, 97, 114, 100, 46, 32, 65, 114, 99, 104, 105, 118, 101, 100, 32, 102, 114, 111, 109, 32, 116, 104, 101, 268, 114, 105, 103, 105, 110, 97, 108, 268, 110, 32, 65, 112, 114, 105, 108, 32, 50, 49, 44, 32, 50, 48, 50, 51, 46, 32, 82, 101, 116, 114, 105, 101, 118, 101, 100, 32, 77, 97, 121, 32, 49, 49, 44, 32, 50, 48, 50, 51, 46, 10, 32, 68, 101, 109, 101, 110, 116, 114, 105, 44, 32, 78, 105, 107, 107, 105, 32, 40, 77, 97, 121, 32, 49, 54, 44, 32, 50, 48, 50, 51, 41, 46, 32, 34, 39, 73, 116, 39, 115, 32, 97, 32, 98, 108, 101, 115, 115, 105, 110, 103, 39, 58, 32, 83, 111, 117, 116, 104, 32, 80, 104, 105, 108, 108, 121, 32, 112, 105, 122, 122, 97, 44, 32, 99, 104, 101, 101, 115, 101, 115, 116, 267, 107, 32, 115, 104, 111, 112, 32, 116, 104, 97, 110, 107, 102, 117, 108, 32, 102, 111, 114, 32, 84, 46, 32, 83, 119, 105, 102, 116]\n"
+        },
+        {
+          "step": "equivalence",
+          "side": "cand",
+          "exit": 0,
+          "duration_ms": 2338,
+          "timed_out": false,
+          "tail": ", 32, 69, 110, 111, 117, 103, 104, 32, 116, 111, 32, 70, 101, 101, 100, 32, 39, 79, 118, 101, 114, 32, 49, 50, 53, 44, 48, 48, 48, 39, 32, 283, 32, 84, 97, 109, 112, 97, 32, 70, 111, 111, 100, 32, 66, 97, 110, 107, 32, 65, 104, 267, 100, 268, 102, 32, 84, 104, 101, 32, 69, 114, 97, 115, 32, 84, 111, 117, 114, 32, 83, 116, 111, 112, 34, 46, 32, 66, 105, 108, 108, 269, 97, 114, 100, 46, 32, 65, 114, 99, 104, 105, 118, 101, 100, 32, 102, 114, 111, 109, 32, 116, 104, 101, 268, 114, 105, 103, 105, 110, 97, 108, 268, 110, 32, 65, 112, 114, 105, 108, 32, 50, 49, 44, 32, 50, 48, 50, 51, 46, 32, 82, 101, 116, 114, 105, 101, 118, 101, 100, 32, 77, 97, 121, 32, 49, 49, 44, 32, 50, 48, 50, 51, 46, 10, 32, 68, 101, 109, 101, 110, 116, 114, 105, 44, 32, 78, 105, 107, 107, 105, 32, 40, 77, 97, 121, 32, 49, 54, 44, 32, 50, 48, 50, 51, 41, 46, 32, 34, 39, 73, 116, 39, 115, 32, 97, 32, 98, 108, 101, 115, 115, 105, 110, 103, 39, 58, 32, 83, 111, 117, 116, 104, 32, 80, 104, 105, 108, 108, 121, 32, 112, 105, 122, 122, 97, 44, 32, 99, 104, 101, 101, 115, 101, 115, 116, 267, 107, 32, 115, 104, 111, 112, 32, 116, 104, 97, 110, 107, 102, 117, 108, 32, 102, 111, 114, 32, 84, 46, 32, 83, 119, 105, 102, 116]\n"
+        },
+        {
+          "step": "metrics",
+          "side": "base",
+          "exit": 0,
+          "duration_ms": 10849,
+          "timed_out": false,
+          "tail": "==7== Cachegrind, a cache and branch-prediction profiler\n==7== Copyright (C) 2002-2017, and GNU GPL'd, by Nicholas Nethercote et al.\n==7== Using Valgrind-3.19.0 and LibVEX; rerun with -h for copyright info\n==7== Command: python lineage_bench.py train 1125fdc91bd614c0\n==7== \n==7== \n==7== I   refs:      366,746,317\n"
+        },
+        {
+          "step": "metrics",
+          "side": "cand",
+          "exit": 0,
+          "duration_ms": 10591,
+          "timed_out": false,
+          "tail": "==8== Cachegrind, a cache and branch-prediction profiler\n==8== Copyright (C) 2002-2017, and GNU GPL'd, by Nicholas Nethercote et al.\n==8== Using Valgrind-3.19.0 and LibVEX; rerun with -h for copyright info\n==8== Command: python lineage_bench.py train 1125fdc91bd614c0\n==8== \n==8== \n==8== I   refs:      359,895,235\n"
+        },
+        {
+          "step": "metrics",
+          "side": "base",
+          "exit": 0,
+          "duration_ms": 11291,
+          "timed_out": false,
+          "tail": "==8== Cachegrind, a cache and branch-prediction profiler\n==8== Copyright (C) 2002-2017, and GNU GPL'd, by Nicholas Nethercote et al.\n==8== Using Valgrind-3.19.0 and LibVEX; rerun with -h for copyright info\n==8== Command: python lineage_bench.py encode 1125fdc91bd614c0\n==8== \n==8== \n==8== I   refs:      416,189,055\n"
+        },
+        {
+          "step": "metrics",
+          "side": "cand",
+          "exit": 0,
+          "duration_ms": 11891,
+          "timed_out": false,
+          "tail": "==7== Cachegrind, a cache and branch-prediction profiler\n==7== Copyright (C) 2002-2017, and GNU GPL'd, by Nicholas Nethercote et al.\n==7== Using Valgrind-3.19.0 and LibVEX; rerun with -h for copyright info\n==7== Command: python lineage_bench.py encode 1125fdc91bd614c0\n==7== \n==7== \n==7== I   refs:      409,886,529\n"
+        }
+      ]
+    },
+    {
+      "seq": 26,
+      "kind": "submit",
+      "at": 1791680394114,
+      "reason": "Takes work that most users never need out of the package import. minbpe/__init__.py now loads GPT4Tokenizer on first access through a module __getattr__, so `from minbpe import GPT4Tokenizer` and `minbpe.GPT4Tokenizer` still work. base.py imports unicodedata only inside replace_control_characters, the pretty-printing helper. Tokenizer behaviour is unchanged and outputs are identical. Measured: train_ir ratio 0.9813, encode_ir ratio 0.9849."
+    }
+  ],
+  "candidate": {
+    "commit_id": "0e14d5eb2f78a57d99628c920a5ded0eccee8217b76784f1984c20a4661ed92f",
+    "candidate_id": "bcce49422c0d9273de610d9a83baa7ed4d3bfd65e1b2628d3100007eae6351f1",
+    "kind": "perf",
+    "target": "train_ir",
+    "claimed_effect": 0.9813192888860013,
+    "patch": "diff --git a/minbpe/__init__.py b/minbpe/__init__.py\n--- a/minbpe/__init__.py\n+++ b/minbpe/__init__.py\n@@ -1,4 +1,11 @@\n from .base import Tokenizer\n from .basic import BasicTokenizer\n from .regex import RegexTokenizer\n-from .gpt4 import GPT4Tokenizer\n+\n+\n+def __getattr__(name):\n+    # GPT4Tokenizer is loaded on first access: most users never need it\n+    if name == \"GPT4Tokenizer\":\n+        from .gpt4 import GPT4Tokenizer\n+        return GPT4Tokenizer\n+    raise AttributeError(f\"module {__name__!r} has no attribute {name!r}\")\ndiff --git a/minbpe/base.py b/minbpe/base.py\n--- a/minbpe/base.py\n+++ b/minbpe/base.py\n@@ -5,7 +5,6 @@ It would be possible to be a lot more strict about the interface and\n e.g. isolating all regex/pattern parts to the RegexTokenizer, but\n some concessions are made for simplicity.\n \"\"\"\n-import unicodedata\n from itertools import repeat\n \n try:\n@@ -258,6 +257,7 @@ def replace_control_characters(s: str) -> str:\n     # which distort the output (e.g. \\n or much worse)\n     # https://stackoverflow.com/questions/4324790/removing-control-characters-from-a-string-in-python/19016117#19016117\n     # http://www.unicode.org/reports/tr44/#GC_Values_Table\n+    import unicodedata # only needed for pretty printing, keep it off the import path\n     chars = []\n     for ch in s:\n         if unicodedata.category(ch)[0] != \"C\":\n",
+    "patch_hash": "a1e6047c2f4189b1edd2410b5612e5af608a41aa12bd442d24c6a6dc407de46c",
+    "semantic_hash": "465c6df7b3c09b505a9b3fbba6c89a27d7d93707a3be82cbe8e04fe290d3b74e",
+    "status": "accepted",
+    "reason": null,
+    "committed_at": 1791680394133,
+    "revealed_at": 1791680394137,
+    "finalized_at": 1791680608489,
+    "gen_id": "fea8705944e1c74a8b42977f90b5943662be44727164961e0688274432292f8b"
+  },
+  "replays": [
+    {
+      "replay_id": "0c3aae4d5610a681a47886c1802e920a9bb4711199436c67597e68a56bc7e537",
+      "kind": "replay",
+      "role": "counted",
+      "status": "revealed",
+      "replayer": "3jJHAgibtbRtbTw9T2TMadYppiFV2YzGptWMrCsgu6Xz",
+      "counted": true,
+      "apply": "ok",
+      "build": {
+        "base": "ok",
+        "cand": "ok"
+      },
+      "tests": {
+        "base_pass": 21,
+        "cand_pass": 21,
+        "cand_fail": 0
+      },
+      "equivalence_same": true,
+      "metrics": {
+        "encode_ir": {
+          "base": [
+            420017822
+          ],
+          "cand": [
+            413098135
+          ],
+          "ratio": 0.9835252538403001
+        },
+        "train_ir": {
+          "base": [
+            380499892
+          ],
+          "cand": [
+            373716062
+          ],
+          "ratio": 0.982171269578179
+        }
+      },
+      "env": {
+        "cores": 2,
+        "cpu_model": "DO-Regular",
+        "image_digest": "sha256:beb7b0264451a2bdc993fe5deee1e8b6275fbad7d83d593c69f7a40c64f1164d",
+        "worker_version": "lineage-sandbox/0.1.0"
+      }
+    },
+    {
+      "replay_id": "6315e86f26c309317c29b958cb4a82cf540c49781932ff0107e43bfd4724af59",
+      "kind": "replay",
+      "role": "counted",
+      "status": "revealed",
+      "replayer": "7ToydZerFjuoguBEBkdnJgFfjED2paWonAecHSVA1kjK",
+      "counted": true,
+      "apply": "ok",
+      "build": {
+        "base": "ok",
+        "cand": "ok"
+      },
+      "tests": {
+        "base_pass": 21,
+        "cand_pass": 21,
+        "cand_fail": 0
+      },
+      "equivalence_same": true,
+      "metrics": {
+        "encode_ir": {
+          "base": [
+            420017816
+          ],
+          "cand": [
+            413098135
+          ],
+          "ratio": 0.9835252678900649
+        },
+        "train_ir": {
+          "base": [
+            380499892
+          ],
+          "cand": [
+            373716068
+          ],
+          "ratio": 0.9821712853469089
+        }
+      },
+      "env": {
+        "cores": 2,
+        "cpu_model": "DO-Regular",
+        "image_digest": "sha256:beb7b0264451a2bdc993fe5deee1e8b6275fbad7d83d593c69f7a40c64f1164d",
+        "worker_version": "lineage-sandbox/0.1.0"
+      }
+    }
+  ],
+  "verdict": {
+    "outcome": "accepted",
+    "reason": null,
+    "detail": null,
+    "effect": {
+      "metric": "train_ir",
+      "ratio": 0.9821712853469089,
+      "ci_low": 0.982171269578179,
+      "ci_high": 0.9821712853469089,
+      "per_replay": [
+        {
+          "replay_id": "0c3aae4d5610a681a47886c1802e920a9bb4711199436c67597e68a56bc7e537",
+          "ratio": 0.982171269578179,
+          "ci_low": 0.982171269578179,
+          "ci_high": 0.982171269578179,
+          "pass": true
+        },
+        {
+          "replay_id": "6315e86f26c309317c29b958cb4a82cf540c49781932ff0107e43bfd4724af59",
+          "ratio": 0.9821712853469089,
+          "ci_low": 0.9821712853469089,
+          "ci_high": 0.9821712853469089,
+          "pass": true
+        }
+      ]
+    },
+    "digest": "b1a54649c8f0badc9cb3561d0533bdd5f2cc0f1709604ec41ebe3da33b17c109"
+  },
+  "outcome": "accepted",
+  "effect": {
+    "metric": "train_ir",
+    "ratio": 0.9821712853469089,
+    "ci_low": 0.982171269578179,
+    "ci_high": 0.9821712853469089,
+    "gain_pct": 1.7828714653091104
+  },
+  "cost": {
+    "input_tokens": 986,
+    "output_tokens": 7558,
+    "cache_read_tokens": 129334,
+    "cache_write_tokens": 33902,
+    "usd": 0.350481,
+    "sandbox_s": 171,
+    "source": "provenance:hosted"
+  },
+  "reward": {
+    "v": 1,
+    "accepted": 1,
+    "effect": 0.017828714653091104,
+    "fixed_tests": 0,
+    "effect_per_usd": 0.05086927580408383,
+    "effect_per_sandbox_hour": 0.37534136111770744,
+    "reverted": false,
+    "inputs": [
+      "outcome",
+      "verdict.effect.ratio",
+      "cost.usd (provenance:hosted)",
+      "cost.sandbox_s (provenance:hosted)"
+    ]
+  },
+  "worker_outcome": "submitted a perf candidate on train_ir (11 changed lines); it was committed and revealed (status queued); its verdict comes later from independent replays",
+  "journal": {
+    "entry_id": "3cab05645ce2e1d798d2ca460a71c2fa0a7477ae83a03fd56e288e008db80b34",
+    "text": "I tried to cut import cost from the minbpe package. In minbpe/__init__.py I made GPT4Tokenizer load lazily through a module __getattr__, so both `from minbpe import GPT4Tokenizer` and attribute access still work. In base.py I moved the unicodedata import into replace_control_characters, the pretty-printing helper.\n\nMy one sandbox evaluation on train_ir came back accepted. The guard was ok with 2 files and 11 lines, both builds were ok, and outputs were identical. train_ir went from 366746317 to 359895235, ratio 0.9813. encode_ir went from 416189055 to 409886529, ratio 0.9849. I submitted it and it is queued for independent replays. That is not a verdict.\n\nI now believe a visible share of the measured instructions in this bench is import overhead, not tokenizer work. The training and encoding loops themselves are still untouched.\n\nNext I should profile the hot loops in basic.py and regex.py, such as get_stats and merge, and look for real algorithmic savings there.",
+    "created_at": 1791680398771,
+    "sig": "33o6fFhA63mCKZPxEfviZ4DMe179FcpGcxYeax8LhjxKFXqJLUGSmwckhLeXEas4R7i4jG86A9qjt1YhLkj12bMK",
+    "signer": "CQjbeRaBkoutC3LcTBimCNeXMfqESR4EUgKSKvR8Ej5r"
+  },
+  "provenance": {
+    "runtime": "hosted",
+    "digest": "6e90c405bfc1e2f3c36b9c4facfc6a9b7bc04930c339bab5769814aac8198c59",
+    "sig": "53YhTZ1f2Ykq2zDx9Ju1f41e5uXL2TjXrVksa6AgBRCfC2v4JSUvDWPv1tBQxBv7ZrsfitnMoFmW3jpHHRTirRAZ",
+    "signer": "DCmdy5MoAfnN6fn3nVW27db62ZwtjoksqSqdjAc8VPk4"
+  },
+  "license": {
+    "repo": "https://github.com/karpathy/minbpe",
+    "spdx": "MIT",
+    "name": "MIT License",
+    "url": "https://github.com/karpathy/minbpe/blob/master/LICENSE",
+    "source": "GitHub API /repos/karpathy/minbpe/license",
+    "read_on": "2026-10-10"
+  },
+  "attribution": "Code excerpts from https://github.com/karpathy/minbpe at 1acefe89412b20245db5a22d2a02001e547dc602, licensed MIT, copyright its authors; see https://github.com/karpathy/minbpe/blob/master/LICENSE.",
+  "times": {
+    "started_at": 1791680141383,
+    "ended_at": 1791680394188,
+    "finalized_at": 1791680608489,
+    "published_at": 1791680663833
+  },
+  "verify": {
+    "session": "/v1/sessions/30d2bf009dc8e78ee67ff0e73969e36a9a9ef4ff0835b863e7b8971b6ab6086a",
+    "candidate": "/v1/candidates/0e14d5eb2f78a57d99628c920a5ded0eccee8217b76784f1984c20a4661ed92f",
+    "generation": "/v1/generations/fea8705944e1c74a8b42977f90b5943662be44727164961e0688274432292f8b",
+    "provenance": "/v1/candidates/0e14d5eb2f78a57d99628c920a5ded0eccee8217b76784f1984c20a4661ed92f/provenance",
+    "journal": "/v1/agents/6C8N2z5LwktukWEP6g8sUnf9ky1L9rxyngBLbdomUzHc/journal?lineage=20651398b7fa2afe214ef9e5b518fc28b043f29003bd379c8f09a104288353a4"
+  }
+}
