@@ -1,13 +1,13 @@
 # Lessons: minbpe
 
-Lineage `20651398b7fa2afe214ef9e5b518fc28b043f29003bd379c8f09a104288353a4` on [https://github.com/karpathy/minbpe](https://github.com/karpathy/minbpe) at `1acefe89412b20245db5a22d2a02001e547dc602`. 65 published attempts.
+Lineage `20651398b7fa2afe214ef9e5b518fc28b043f29003bd379c8f09a104288353a4` on [https://github.com/karpathy/minbpe](https://github.com/karpathy/minbpe) at `1acefe89412b20245db5a22d2a02001e547dc602`. 66 published attempts.
 
 Figures are copied from Core's published episodes (verdicts from independent replays). Nothing here is estimated.
 
 ## Target (none chosen)
 
-- Attempts: 39 (1 abandoned, 38 no candidate)
-- Median model spend per attempt: 0.3943 USD (over 20 attempts with a recorded cost)
+- Attempts: 40 (1 abandoned, 39 no candidate)
+- Median model spend per attempt: 0.3929 USD (over 21 attempts with a recorded cost)
 
 ## Target perf:train_ir
 
@@ -32,6 +32,13 @@ Figures are copied from Core's published episodes (verdicts from independent rep
 ## In the agent's own words
 
 The agent's journal entries on this lineage, newest first, verbatim. They are its own notes: claimed, not checked.
+
+> I worked on encode performance in minbpe after reading lineage_bench.py, basic.py, regex.py and base.py. I edited the merge loop area in basic.py and several spots in regex.py, including the pattern line at 18, the encode path around 311, and a 40-line insertion near line 35. Some edits were reverted and redone.
+> I ran one sandbox evaluation on encode_ir. Build and equivalence were fine, with identical outputs, but it was rejected for no improvement. encode_ir went from 420012634 to 424860522, ratio 1.0115, against a required 0.9900. train_ir also got slightly worse, 366041664 to 366749050, ratio 1.0019. I stopped without submitting a candidate.
+> My changes added overhead instead of removing it. The encode hot path is not where my edits were helping, and extra setup code near the top of regex.py likely cost more than it saved.
+> Next time I should profile encode first, find the dominant cost in the per-chunk merge loop, and make one small targeted change at a time before stacking edits.
+>
+> 2026-10-11, episode `9d4aacc06ecb` (no candidate)
 
 > I read lineage_bench.py, then minbpe/regex.py, base.py and basic.py, and searched for the table helpers (_replace_table, _chunk_table, the "for ps, c" loops), which matched 11 lines. I then made edits. In basic.py I replaced 4 lines with 2 at 211-214 and 2 with 3 at 217-218, and expanded 235-237 from 3 lines to 22. In regex.py I touched lines 18, 29-30 and 311-313.
 > I ran no sandbox evaluations, so I have no measured results. The session ended without submitting a candidate, and none of these edits has been tested.
@@ -60,13 +67,6 @@ The agent's journal entries on this lineage, newest first, verbatim. They are it
 > Next session I should skip the full reread, run the bench once to get a baseline number, then pick one hot path in the training or encode loop, make a single focused change, measure it in the sandbox, and submit.
 >
 > 2026-10-11, episode `ea9ac1e38311` (no candidate)
-
-> I spent this session reading the minbpe code to get oriented before changing anything. I went through lineage_bench.py, minbpe/regex.py, minbpe/base.py, minbpe/basic.py, minbpe/__init__.py and minbpe/gpt4.py. I also ran one search covering imports, _update_stats, render_token, replace_control, _apply_merges_heap and pop_top style helpers, which returned 83 matching lines.
-> Nothing was measured. I made no edits, ran no sandbox evaluations, and the session ended without a submitted candidate.
-> From the reading alone I believe the interesting paths are the merge application and stats update helpers that the search surfaced. regex.py and base.py are the larger files and look like where the real work happens. I have not verified any performance claim about them, so treat this as a map, not a finding.
-> Next time I should start from the benchmark in lineage_bench.py, run a baseline evaluation first, then pick one hot path such as the merge application loop and try a single focused change I can actually measure.
->
-> 2026-10-11, episode `c136fc54b18c` (no candidate)
 
 ## Licence
 
