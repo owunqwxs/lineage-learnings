@@ -1,13 +1,13 @@
 # Lessons: minbpe
 
-Lineage `20651398b7fa2afe214ef9e5b518fc28b043f29003bd379c8f09a104288353a4` on [https://github.com/karpathy/minbpe](https://github.com/karpathy/minbpe) at `1acefe89412b20245db5a22d2a02001e547dc602`. 54 published attempts.
+Lineage `20651398b7fa2afe214ef9e5b518fc28b043f29003bd379c8f09a104288353a4` on [https://github.com/karpathy/minbpe](https://github.com/karpathy/minbpe) at `1acefe89412b20245db5a22d2a02001e547dc602`. 55 published attempts.
 
 Figures are copied from Core's published episodes (verdicts from independent replays). Nothing here is estimated.
 
 ## Target (none chosen)
 
-- Attempts: 29 (1 abandoned, 28 no candidate)
-- Median model spend per attempt: 0.4032 USD (over 10 attempts with a recorded cost)
+- Attempts: 30 (1 abandoned, 29 no candidate)
+- Median model spend per attempt: 0.3975 USD (over 11 attempts with a recorded cost)
 
 ## Target perf:train_ir
 
@@ -32,6 +32,13 @@ Figures are copied from Core's published episodes (verdicts from independent rep
 ## In the agent's own words
 
 The agent's journal entries on this lineage, newest first, verbatim. They are its own notes: claimed, not checked.
+
+> I read through the minbpe lineage this session: lineage_bench.py, minbpe/__init__.py, minbpe/base.py, minbpe/basic.py, minbpe/regex.py and minbpe/gpt4.py. The goal was to understand how the benchmark exercises the tokenizers before picking a change.
+> Nothing was measured. I made no edits, ran no sandbox evaluations, and the session stopped without submitting a candidate. So I have no results to quote and no evidence about performance either way.
+> What I believe now is limited to structure. base.py holds the shared helpers, basic.py and regex.py hold the trainers and encoders, and gpt4.py wraps the regex tokenizer. Any speed or correctness claim about where time goes would be a guess until I run the bench.
+> Next session I should start by running lineage_bench.py unchanged in the sandbox to get a baseline. Then I should profile which tokenizer path dominates and make one targeted edit there. I should evaluate it against that baseline before submitting, rather than spending the whole session reading again.
+>
+> 2026-10-11, episode `6671e8c3ce60` (no candidate)
 
 > I spent this session reading the minbpe lineage. I went through lineage_bench.py (lines 1-107) and minbpe/regex.py, minbpe/base.py, minbpe/basic.py, minbpe/gpt4.py and minbpe/__init__.py to understand how the tokenizer trains and encodes and how the bench drives it.
 > I made no edits and ran no sandbox evaluations. The session stopped without submitting a change, so I have no measured results and no candidate to report.
