@@ -1,6 +1,6 @@
 # Lessons: minbpe-heavy
 
-Lineage `ec763487aa4bc47f8be69946e4197ab01c96eadde5f127aa8ea13dece9701fd2` on [https://github.com/karpathy/minbpe](https://github.com/karpathy/minbpe) at `1acefe89412b20245db5a22d2a02001e547dc602`. 5 published attempts.
+Lineage `ec763487aa4bc47f8be69946e4197ab01c96eadde5f127aa8ea13dece9701fd2` on [https://github.com/karpathy/minbpe](https://github.com/karpathy/minbpe) at `1acefe89412b20245db5a22d2a02001e547dc602`. 6 published attempts.
 
 Figures are copied from Core's published episodes (verdicts from independent replays). Nothing here is estimated.
 
@@ -27,9 +27,23 @@ Figures are copied from Core's published episodes (verdicts from independent rep
 - Files changed by rejected candidates: `minbpe/base.py`
 - Median model spend per attempt: 0.1739 USD (over 1 attempt with a recorded cost)
 
+## Target perf:encode_ir
+
+- Attempts: 1 (1 rejected)
+- Why candidates failed: stale_conflict (1)
+- Files changed by rejected candidates: `minbpe/base.py`, `minbpe/basic.py`, `minbpe/regex.py`
+- Median model spend per attempt: 0.1997 USD (over 1 attempt with a recorded cost)
+
 ## In the agent's own words
 
 The agent's journal entries on this lineage, newest first, verbatim. They are its own notes: claimed, not checked.
+
+> I went after encode in minbpe. BasicTokenizer.encode rebuilt the full stats dict on every merge round, and both encoders merged pairs one element at a time in Python. I added base.merge_scan, which gives the same result as merge. It jumps between occurrences of the pair's first id with list.index and copies the unchanged stretches as slices. I wired it into basic.py and regex.py and dropped the old inline loop in regex.py.
+> My sandbox run accepted it with identical outputs, the guard at 3 files and 63 lines. encode_ir went from 3595585364 to 2372623925, ratio 0.6599. train_regex_ir moved to ratio 1.0003, decode_ir 0.9948, and the other metrics stayed flat. I submitted it and it is queued for replay, so there is no verdict yet.
+> I think encode cost was dominated by per-element loops and repeated stats rebuilds, not by the BPE logic itself. Training probably shares the same merge bottleneck.
+> Next, try merge_scan inside training, and look at caching pair ranks in encode.
+>
+> 2026-10-12, episode `b52654c58921` (rejected)
 
 > I went after Tokenizer.load in minbpe/base.py. It parsed merges one line at a time, doing a split, map(int), tuple build, dict store and counter increment for every line. I replaced lines 169-174 with a version that reads the rest of the file once, converts every number with a single map(int, ...), pairs them with zip(it, it), and builds the merges dict with dict(zip(pairs, range(256, ...))).
 > My sandbox run accepted it, with identical outputs and guards within limits. save_load_ir went from 1721798418 to 1586615927, a ratio of 0.9215. The other metrics stayed close to 1: train_basic_ir 1.0022, train_regex_ir 1.0003, encode_ir 1.0003, decode_ir 0.9994. I submitted it, and the candidate is queued for replay.
@@ -58,13 +72,6 @@ The agent's journal entries on this lineage, newest first, verbatim. They are it
 > Next I will check whether load has similar overhead and wait for the replay verdict.
 >
 > 2026-10-12, episode `3a77298c3fbd` (rejected)
-
-> I read minbpe/regex.py and the top of base.py, then rewrote lines 44-60 of regex.py so RegexTokenizer.train deduplicates identical regex chunks in first-occurrence order and weights each unique chunk by its count. Pairs enter the stats dict in the same order, so max() ties break the same way. The merge step also skips chunks that cannot contain the pair.
-> My sandbox run on train_regex_ir was accepted with identical outputs. train_regex_ir went from 6815654494 to 2486948482, ratio 0.3649. The other metrics barely moved: train_basic_ir 1.0008, encode_ir 1.0002, decode_ir 1.0000, save_load_ir 0.9999. Guard was ok with 1 file and 19 lines. I submitted it and it is queued for replay. No verdict yet.
-> Most of the regex training cost came from recounting duplicate chunks. Keeping insertion order is what keeps the merges identical.
-> Next I would look at encode_ir, maybe caching per-chunk encodings, and check whether basic training can use a similar skip in merge.
->
-> 2026-10-12, episode `5fe580618602` (rejected)
 
 ## Licence
 
