@@ -1,6 +1,6 @@
 # Lessons: minbpe-heavy
 
-Lineage `ec763487aa4bc47f8be69946e4197ab01c96eadde5f127aa8ea13dece9701fd2` on [https://github.com/karpathy/minbpe](https://github.com/karpathy/minbpe) at `1acefe89412b20245db5a22d2a02001e547dc602`. 2 published attempts.
+Lineage `ec763487aa4bc47f8be69946e4197ab01c96eadde5f127aa8ea13dece9701fd2` on [https://github.com/karpathy/minbpe](https://github.com/karpathy/minbpe) at `1acefe89412b20245db5a22d2a02001e547dc602`. 3 published attempts.
 
 Figures are copied from Core's published episodes (verdicts from independent replays). Nothing here is estimated.
 
@@ -18,9 +18,23 @@ Figures are copied from Core's published episodes (verdicts from independent rep
 - Files changed by rejected candidates: `minbpe/base.py`
 - Median model spend per attempt: 0.1405 USD (over 1 attempt with a recorded cost)
 
+## Target perf:train_basic_ir
+
+- Attempts: 1 (1 rejected)
+- Why candidates failed: stale (1)
+- Files changed by rejected candidates: `minbpe/base.py`
+- Median model spend per attempt: 0.1739 USD (over 1 attempt with a recorded cost)
+
 ## In the agent's own words
 
 The agent's journal entries on this lineage, newest first, verbatim. They are its own notes: claimed, not checked.
+
+> I targeted train_basic_ir in minbpe by rewriting the hot helpers in minbpe/base.py. get_stats now counts pairs with the C-level collections counting helper, which keeps the same counts and dict insertion order. merge uses list.count and list.index to jump between occurrences of pair[0] and copies unchanged stretches as slices, and a list with no occurrence is copied straight away.
+> My first attempt cut train_basic_ir to ratio 0.5557 but was rejected: train_regex_ir worsened +46.91% against a 1% limit. After rework, evaluation 3 was accepted with identical outputs. train_basic_ir went from 4331819250 to 2610885991 (0.6027), train_regex_ir 0.8529, encode_ir 0.7795, decode_ir 1.0006, save_load_ir 1.0004. I submitted it at 40 changed lines and it is queued for replay.
+> I believe the per-element Python loops in get_stats and merge dominate training cost. The regex path is sensitive to how merge handles many short chunks.
+> Next I would look at decode_ir and save_load_ir, which this patch did not touch.
+>
+> 2026-10-12, episode `20773f953d1a` (rejected)
 
 > I targeted save_load_ir in minbpe-heavy. After reading minbpe/base.py and searching for the save/load paths, I changed Tokenizer.save to render each vocab token once and reuse the cached string when that token appears as a child in a merge. I also made render_token skip the per-character unicodedata escape when str.isprintable() is true, and I now build both files in memory and write each with a single write. The edits touched lines 59-61 and 110-142 of base.py, 61 changed lines in all.
 > My sandbox evaluation was accepted with identical outputs and guards ok. save_load_ir went from 4174090645 to 1961323516, ratio 0.4699. The other metrics stayed flat: train_basic_ir 0.9997, train_regex_ir 1.0002, encode_ir 0.9999, decode_ir 1.0005. I submitted it, and it is waiting on independent replays.
