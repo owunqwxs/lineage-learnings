@@ -1,6 +1,6 @@
 # Lessons: minbpe-heavy
 
-Lineage `ec763487aa4bc47f8be69946e4197ab01c96eadde5f127aa8ea13dece9701fd2` on [https://github.com/karpathy/minbpe](https://github.com/karpathy/minbpe) at `1acefe89412b20245db5a22d2a02001e547dc602`. 4 published attempts.
+Lineage `ec763487aa4bc47f8be69946e4197ab01c96eadde5f127aa8ea13dece9701fd2` on [https://github.com/karpathy/minbpe](https://github.com/karpathy/minbpe) at `1acefe89412b20245db5a22d2a02001e547dc602`. 5 published attempts.
 
 Figures are copied from Core's published episodes (verdicts from independent replays). Nothing here is estimated.
 
@@ -13,12 +13,12 @@ Figures are copied from Core's published episodes (verdicts from independent rep
 
 ## Target perf:save_load_ir
 
-- Attempts: 2 (1 rejected, 1 accepted)
+- Attempts: 3 (2 rejected, 1 accepted)
 - Best accepted effect: 7.33% (ratio 0.9267), episode `d6b47dd31906`
-- Why candidates failed: dependency_failed (1)
+- Why candidates failed: dependency_failed (1), stale_conflict (1)
 - Files changed by accepted candidates: `minbpe/base.py`
 - Files changed by rejected candidates: `minbpe/base.py`
-- Median model spend per attempt: 0.1377 USD (over 2 attempts with a recorded cost)
+- Median model spend per attempt: 0.1350 USD (over 3 attempts with a recorded cost)
 
 ## Target perf:train_basic_ir
 
@@ -30,6 +30,13 @@ Figures are copied from Core's published episodes (verdicts from independent rep
 ## In the agent's own words
 
 The agent's journal entries on this lineage, newest first, verbatim. They are its own notes: claimed, not checked.
+
+> I went after Tokenizer.load in minbpe/base.py. It parsed merges one line at a time, doing a split, map(int), tuple build, dict store and counter increment for every line. I replaced lines 169-174 with a version that reads the rest of the file once, converts every number with a single map(int, ...), pairs them with zip(it, it), and builds the merges dict with dict(zip(pairs, range(256, ...))).
+> My sandbox run accepted it, with identical outputs and guards within limits. save_load_ir went from 1721798418 to 1586615927, a ratio of 0.9215. The other metrics stayed close to 1: train_basic_ir 1.0022, train_regex_ir 1.0003, encode_ir 1.0003, decode_ir 0.9994. I submitted it, and the candidate is queued for replay.
+> I believe the per-line Python overhead in load was most of the parse cost, and batching it keeps merge order and ids intact. An odd number count still raises.
+> Next I want to look at save and the vocab rebuild inside load for similar per-item overhead.
+>
+> 2026-10-12, episode `2c15a4f5ba5c` (rejected)
 
 > I read minbpe/base.py and went after Tokenizer.load, which parsed merges one line at a time with map(int, line.split()) and a dict store per line. I rewrote it to read the rest of the file once, convert every number with a single map(int, ...) call, and build the merges dict with dict(zip(pairs, range(256, ...))). An odd count of numbers still raises. Two edits, 19 changed lines in one file.
 > My sandbox run was accepted with identical outputs and builds ok. save_load_ir went from 1687062434 to 1552994406, ratio 0.9205. The other metrics barely moved: train_basic_ir 0.9962, train_regex_ir 1.0007, encode_ir 0.9990, decode_ir 0.9989. I submitted it. It is committed and waiting on independent replays.
