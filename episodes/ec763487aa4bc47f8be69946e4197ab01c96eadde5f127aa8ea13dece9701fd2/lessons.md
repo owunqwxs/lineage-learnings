@@ -1,6 +1,6 @@
 # Lessons: minbpe-heavy
 
-Lineage `ec763487aa4bc47f8be69946e4197ab01c96eadde5f127aa8ea13dece9701fd2` on [https://github.com/karpathy/minbpe](https://github.com/karpathy/minbpe) at `1acefe89412b20245db5a22d2a02001e547dc602`. 6 published attempts.
+Lineage `ec763487aa4bc47f8be69946e4197ab01c96eadde5f127aa8ea13dece9701fd2` on [https://github.com/karpathy/minbpe](https://github.com/karpathy/minbpe) at `1acefe89412b20245db5a22d2a02001e547dc602`. 7 published attempts.
 
 Figures are copied from Core's published episodes (verdicts from independent replays). Nothing here is estimated.
 
@@ -22,10 +22,10 @@ Figures are copied from Core's published episodes (verdicts from independent rep
 
 ## Target perf:train_basic_ir
 
-- Attempts: 1 (1 rejected)
-- Why candidates failed: stale (1)
+- Attempts: 2 (2 rejected)
+- Why candidates failed: stale (1), no_improvement (1)
 - Files changed by rejected candidates: `minbpe/base.py`
-- Median model spend per attempt: 0.1739 USD (over 1 attempt with a recorded cost)
+- Median model spend per attempt: 0.1496 USD (over 2 attempts with a recorded cost)
 
 ## Target perf:encode_ir
 
@@ -37,6 +37,13 @@ Figures are copied from Core's published episodes (verdicts from independent rep
 ## In the agent's own words
 
 The agent's journal entries on this lineage, newest first, verbatim. They are its own notes: claimed, not checked.
+
+> I read minbpe/base.py and basic.py, then rewrote get_stats and merge in base.py for inputs longer than 64 ids. get_stats now counts pairs with collections._count_elements, which keeps the same counts and dict insertion order. merge finds each pair[0] with list.index and copies the unchanged runs between hits as slices. Short lists keep the old loops.
+> My sandbox run was accepted with identical outputs and builds ok. train_basic_ir went from 4050070444 to 2279750450, ratio 0.5629. encode_ir went from 3510363127 to 2658850759, ratio 0.7574. train_regex_ir moved by 1.0063, decode_ir by 1.0012 and save_load_ir by 1.0004, all within guard limits. I submitted it at 25 changed lines and it is queued for replay.
+> The cost sits in the per-element Python loops in these two helpers, and pushing that work into C pays off on long id lists. Regex training splits text into short chunks, so it gains nothing.
+> Next, look at regex training's per-chunk overhead, perhaps by counting stats across all chunks in one pass.
+>
+> 2026-10-12, episode `589438317699` (rejected)
 
 > I went after encode in minbpe. BasicTokenizer.encode rebuilt the full stats dict on every merge round, and both encoders merged pairs one element at a time in Python. I added base.merge_scan, which gives the same result as merge. It jumps between occurrences of the pair's first id with list.index and copies the unchanged stretches as slices. I wired it into basic.py and regex.py and dropped the old inline loop in regex.py.
 > My sandbox run accepted it with identical outputs, the guard at 3 files and 63 lines. encode_ir went from 3595585364 to 2372623925, ratio 0.6599. train_regex_ir moved to ratio 1.0003, decode_ir 0.9948, and the other metrics stayed flat. I submitted it and it is queued for replay, so there is no verdict yet.
@@ -65,13 +72,6 @@ The agent's journal entries on this lineage, newest first, verbatim. They are it
 > Next I would look at decode_ir and save_load_ir, which this patch did not touch.
 >
 > 2026-10-12, episode `20773f953d1a` (rejected)
-
-> I targeted save_load_ir in minbpe-heavy. After reading minbpe/base.py and searching for the save/load paths, I changed Tokenizer.save to render each vocab token once and reuse the cached string when that token appears as a child in a merge. I also made render_token skip the per-character unicodedata escape when str.isprintable() is true, and I now build both files in memory and write each with a single write. The edits touched lines 59-61 and 110-142 of base.py, 61 changed lines in all.
-> My sandbox evaluation was accepted with identical outputs and guards ok. save_load_ir went from 4174090645 to 1961323516, ratio 0.4699. The other metrics stayed flat: train_basic_ir 0.9997, train_regex_ir 1.0002, encode_ir 0.9999, decode_ir 1.0005. I submitted it, and it is waiting on independent replays.
-> I believe the save cost was dominated by redundant token rendering and per-character category lookups.
-> Next I will check whether load has similar overhead and wait for the replay verdict.
->
-> 2026-10-12, episode `3a77298c3fbd` (rejected)
 
 ## Licence
 
